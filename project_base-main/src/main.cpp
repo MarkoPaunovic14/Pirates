@@ -167,7 +167,8 @@ int main() {
 
     // load models
     // -----------
-    Model ourModel("resources/objects/backpack/backpack.obj");
+    stbi_set_flip_vertically_on_load(false);
+    Model ourModel("resources/objects/PirateShip/pirateship.obj");
     ourModel.SetShaderTextureNamePrefix("material.");
 
     PointLight& pointLight = programState->pointLight;
@@ -191,7 +192,7 @@ int main() {
             5.0f, -0.5f, -5.0f, 0.0f, 1.0f, 0.0f, 2.0f, 2.0f
     };
     // plane VAO
-    unsigned int planeVAO, planeVBO;
+    unsigned int planeVAO, planeVBO, shipVAO;
     glGenVertexArrays(1, &planeVAO);
     glGenBuffers(1, &planeVBO);
     glBindVertexArray(planeVAO);
@@ -204,7 +205,11 @@ int main() {
     glEnableVertexAttribArray(2);
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
 
-    unsigned int floorTexture = loadTexture(FileSystem::getPath("resources/textures/container.jpg").c_str());
+    glGenVertexArrays(1, &shipVAO);
+    glBindVertexArray(shipVAO);
+
+    unsigned int floorTexture = loadTexture(FileSystem::getPath("resources/textures/wa.jpg").c_str());
+    unsigned int shipTexture = loadTexture(FileSystem::getPath("resources/objects/PirateShip/pirateship.png").c_str());
     // render loop
     // -----------
     while (!glfwWindowShouldClose(window)) {
@@ -228,7 +233,7 @@ int main() {
 
         // don't forget to enable shader before setting uniforms
         ourShader.use();
-        pointLight.position = glm::vec3(4.0 * cos(currentFrame), 4.0f, 4.0 * sin(currentFrame));
+        //pointLight.position = glm::vec3(4.0 * cos(currentFrame), 4.0f, 4.0 * sin(currentFrame));
         ourShader.setVec3("pointLight.position", pointLight.position);
         ourShader.setVec3("pointLight.ambient", pointLight.ambient);
         ourShader.setVec3("pointLight.diffuse", pointLight.diffuse);
@@ -245,11 +250,17 @@ int main() {
         ourShader.setMat4("projection", projection);
         ourShader.setMat4("view", view);
 
-        // render the loaded model backpack
+        // render the loaded model pirateship
         glm::mat4 model = glm::mat4(1.0f); //inicijalizacija
         model = glm::translate(model,
                                programState->backpackPosition); // translate it down so it's at the center of the scene
         model = glm::scale(model, glm::vec3(programState->backpackScale));    // it's a bit too big for our scene, so scale it down
+
+
+
+        glBindVertexArray(shipVAO);
+        glBindTexture(GL_TEXTURE_2D, shipTexture);
+
         ourShader.setMat4("model", model);
         ourModel.Draw(ourShader);
 
@@ -257,7 +268,7 @@ int main() {
         glBindVertexArray(planeVAO);
         glBindTexture(GL_TEXTURE_2D, floorTexture);
         model = glm::mat4(1.0f);
-        model = glm::scale(model, glm::vec3(20, 0, 20));
+        model = glm::scale(model, glm::vec3(10, 0, 10));
         ourShader.setMat4("model", model);
         glDrawArrays(GL_TRIANGLES, 0, 6);
 
