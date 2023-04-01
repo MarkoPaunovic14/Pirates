@@ -174,7 +174,7 @@ int main() {
     PointLight& pointLight = programState->pointLight;
     pointLight.position = glm::vec3(4.0f, 4.0, 0.0);
     pointLight.ambient = glm::vec3(0.1, 0.1, 0.1);
-    pointLight.diffuse = glm::vec3(0.6, 0.6, 0.6);
+    pointLight.diffuse = glm::vec3(0.8, 0.8, 0.8);
     pointLight.specular = glm::vec3(1.0, 1.0, 1.0);
 
     pointLight.constant = 1.0f;
@@ -208,7 +208,7 @@ int main() {
     glGenVertexArrays(1, &shipVAO);
     glBindVertexArray(shipVAO);
 
-    unsigned int floorTexture = loadTexture(FileSystem::getPath("resources/textures/water.jpg").c_str());
+    unsigned int floorTexture = loadTexture(FileSystem::getPath("resources/textures/water4.jpg").c_str());
     unsigned int shipTexture = loadTexture(FileSystem::getPath("resources/objects/pirateship/pirateship.png").c_str());
     // render loop
     // -----------
