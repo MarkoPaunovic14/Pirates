@@ -168,7 +168,7 @@ int main() {
     // load models
     // -----------
     stbi_set_flip_vertically_on_load(false);
-    Model ourModel("resources/objects/PirateShip/pirateship.obj");
+    Model ourModel("resources/objects/pirateship/pirateship.obj");
     ourModel.SetShaderTextureNamePrefix("material.");
 
     PointLight& pointLight = programState->pointLight;
@@ -208,8 +208,8 @@ int main() {
     glGenVertexArrays(1, &shipVAO);
     glBindVertexArray(shipVAO);
 
-    unsigned int floorTexture = loadTexture(FileSystem::getPath("resources/textures/wa.jpg").c_str());
-    unsigned int shipTexture = loadTexture(FileSystem::getPath("resources/objects/PirateShip/pirateship.png").c_str());
+    unsigned int floorTexture = loadTexture(FileSystem::getPath("resources/textures/water.jpg").c_str());
+    unsigned int shipTexture = loadTexture(FileSystem::getPath("resources/objects/pirateship/pirateship.png").c_str());
     // render loop
     // -----------
     while (!glfwWindowShouldClose(window)) {
