@@ -178,8 +178,8 @@ int main() {
     pointLight.specular = glm::vec3(1.0, 1.0, 1.0);
 
     pointLight.constant = 1.0f;
-    pointLight.linear = 0.09f;
-    pointLight.quadratic = 0.032f;
+    pointLight.linear = 0.0f;
+    pointLight.quadratic = 0.0f;
 
     float planeVertices[] = {
                     // positions            //normals             // texture Coords
@@ -208,7 +208,7 @@ int main() {
     glGenVertexArrays(1, &shipVAO);
     glBindVertexArray(shipVAO);
 
-    unsigned int floorTexture = loadTexture(FileSystem::getPath("resources/textures/water4.jpg").c_str());
+    unsigned int floorTexture = loadTexture(FileSystem::getPath("resources/textures/water.jpg").c_str());
     unsigned int shipTexture = loadTexture(FileSystem::getPath("resources/objects/pirateship/pirateship.png").c_str());
     // render loop
     // -----------
