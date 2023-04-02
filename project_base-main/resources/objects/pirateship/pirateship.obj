@@ -1,6 +1,6 @@
 # Blender v2.78 (sub 0) OBJ File: 'pirate baot.blend'
 # www.blender.org
-mtllib pirate baot.mtl
+mtllib pirateship.mtl
 o boat_Cube
 v 2.987381 1.522065 -7.157831
 v 3.513759 3.179745 -7.016395
