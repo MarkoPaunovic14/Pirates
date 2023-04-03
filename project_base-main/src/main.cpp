@@ -38,6 +38,8 @@ bool firstMouse = true;
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
+bool dayNnite = true; // day is true
+
 struct PointLight {
     glm::vec3 position;
     glm::vec3 ambient;
@@ -175,6 +177,9 @@ int main() {
     Model cannon("resources/objects/cannon/14054_Pirate_Ship_Cannon_on_Cart_v1_l3.obj");
     cannon.SetShaderTextureNamePrefix("material.");
 
+    Model island("resources/objects/island/island/island.obj");
+    island.SetShaderTextureNamePrefix("material.");
+
     PointLight& pointLight = programState->pointLight;
     pointLight.position = glm::vec3(4.0f, 4.0, 0.0);
     pointLight.ambient = glm::vec3(0.2, 0.2, 0.2);
@@ -271,16 +276,27 @@ int main() {
     unsigned int floorTexture = loadTexture(FileSystem::getPath("resources/textures/water.jpg").c_str());
 
     // SkyBox textures and shader configuration
-    vector<std::string> faces
+    vector<std::string> day
             {
-                    FileSystem::getPath("resources/textures/skybox/skybox2/right.png"),
-                    FileSystem::getPath("resources/textures/skybox/skybox2/left.png"),
-                    FileSystem::getPath("resources/textures/skybox/skybox2/top.png"),
-                    FileSystem::getPath("resources/textures/skybox/skybox2/bottom.png"),
-                    FileSystem::getPath("resources/textures/skybox/skybox2/front.png"),
-                    FileSystem::getPath("resources/textures/skybox/skybox2/back.png")
+                    FileSystem::getPath("resources/textures/skybox/skyboxday/right.jpg"),
+                    FileSystem::getPath("resources/textures/skybox/skyboxday/left.jpg"),
+                    FileSystem::getPath("resources/textures/skybox/skyboxday/top.jpg"),
+                    FileSystem::getPath("resources/textures/skybox/skyboxday/bottom.jpg"),
+                    FileSystem::getPath("resources/textures/skybox/skyboxday/front.jpg"),
+                    FileSystem::getPath("resources/textures/skybox/skyboxday/back.jpg")
             };
-    unsigned int cubemapTexture = loadCubemap(faces);
+    unsigned int cubemapTextureDay = loadCubemap(day);
+
+    vector<std::string> night
+            {
+                    FileSystem::getPath("resources/textures/skybox/skyboxnight/right.jpg"),
+                    FileSystem::getPath("resources/textures/skybox/skyboxnight/left.jpg"),
+                    FileSystem::getPath("resources/textures/skybox/skyboxnight/top.jpg"),
+                    FileSystem::getPath("resources/textures/skybox/skyboxnight/bottom.jpg"),
+                    FileSystem::getPath("resources/textures/skybox/skyboxnight/front.jpg"),
+                    FileSystem::getPath("resources/textures/skybox/skyboxnight/back.jpg")
+            };
+    unsigned int cubemapTextureNight = loadCubemap(night);
     skyboxShader.use();
     skyboxShader.setInt("skybox", 0);
     // render loop
@@ -337,19 +353,28 @@ int main() {
 
         //cannon
         model = glm::mat4(1.0f); //inicijalizacija
-        model = glm::translate(model,programState->shipPosition); // translate it down so it's at the center of the scene
         model = glm:: translate(model, glm::vec3(2.0f, 3.17f, 0.8f));
         model = glm::rotate(model, glm::radians(270.0f), glm::vec3(1.0f, 0.0f, 0.0f));
         model = glm::scale(model, glm::vec3(0.017f, 0.017f, 0.017f));
-        model = glm::scale(model, glm::vec3(programState->shipScale));    // it's a bit too big for our scene, so scale it down
         ourShader.setMat4("model", model);
         cannon.Draw(ourShader);
 
+        // render island
+        model = glm::mat4(1.0f); //inicijalizacija
+        model = glm::translate(model,programState->shipPosition); // translate it down so it's at the center of the scene
+        model = glm:: translate(model, glm::vec3(-28.0f, 0.0f, -83.0f));
+//        model = glm::rotate(model, glm::radians(270.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.4f, 0.4f, 0.4f));
+        model = glm::scale(model, glm::vec3(programState->shipScale));    // it's a bit too big for our scene, so scale it down
+        ourShader.setMat4("model", model);
+        island.Draw(ourShader);
+
         // floor
-        glBindVertexArray(planeVAO);
-        glBindTexture(GL_TEXTURE_2D, floorTexture);
+
         model = glm::mat4(1.0f);
         model = glm::scale(model, glm::vec3(50, 0, 50));
+        glBindVertexArray(planeVAO);
+        glBindTexture(GL_TEXTURE_2D, floorTexture);
         ourShader.setMat4("model", model);
         glDrawArrays(GL_TRIANGLES, 0, 6);
 
@@ -363,7 +388,10 @@ int main() {
         // skybox cube
         glBindVertexArray(skyboxVAO);
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+        if(dayNnite)
+            glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTextureDay);
+        else
+            glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTextureNight);
         glDrawArrays(GL_TRIANGLES, 0, 36);
         glBindVertexArray(0);
         glDepthFunc(GL_LESS); // set depth function back to default
@@ -485,6 +513,8 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
             glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
         }
     }
+    if (key == GLFW_KEY_L && action == GLFW_PRESS)
+        dayNnite = !dayNnite;
 }
 unsigned int loadTexture(char const * path)
 {
