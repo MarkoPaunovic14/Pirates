@@ -182,9 +182,10 @@ int main() {
 
     Model island("resources/objects/island/island/island.obj");
     island.SetShaderTextureNamePrefix("material.");
-//
-//    Model skull("resources/objects/skull/skull.obj");
-//    skull.SetShaderTextureNamePrefix("material.");
+
+    Model treasure("resources/objects/treasurechest/10803_TreasureChest_v2_L3.obj");
+    treasure.SetShaderTextureNamePrefix("material.");
+
 
     PointLight& pointLight = programState->pointLight;
     pointLight.position = glm::vec3(4.0f, 4.0, 0.0);
@@ -198,13 +199,13 @@ int main() {
 
     float planeVertices[] = {
                     // positions            //normals             // texture Coords
-            5.0f, -0.5f,  5.0f, 0.0f, 1.0f, 0.0f,  2.0f, 0.0f,
-            -5.0f, -0.5f,  5.0f,  0.0f, 1.0f, 0.0f,0.0f, 0.0f,
-            -5.0f, -0.5f, -5.0f, 0.0f, 1.0f, 0.0f, 0.0f, 2.0f,
+            1.0f, -0.0f,  1.0f, 0.0f, 0.0f, 0.0f,  1.0f, 0.0f,
+            -1.0f, -0.0f,  1.0f,  0.0f, 0.0f, 0.0f,0.0f, 0.0f,
+            -1.0f, -0.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f,
 
-            5.0f, -0.5f,  5.0f, 0.0f, 1.0f, 0.0f, 2.0f, 0.0f,
-            -5.0f, -0.5f, -5.0f, 0.0f, 1.0f, 0.0f, 0.0f, 2.0f,
-            5.0f, -0.5f, -5.0f, 0.0f, 1.0f, 0.0f, 2.0f, 2.0f
+            1.0f, -0.0f,  1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f,
+            -1.0f, -0.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f,
+            1.0f, -0.0f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f
     };
 
     // SkyBox
@@ -279,7 +280,7 @@ int main() {
 
 
     // loading textures
-    unsigned int floorTexture = loadTexture(FileSystem::getPath("resources/textures/water.jpg").c_str());
+    unsigned int floorTexture = loadTexture(FileSystem::getPath("resources/textures/pirateskull.png").c_str());
 
     // SkyBox textures and shader configuration
     vector<std::string> day
@@ -326,7 +327,7 @@ int main() {
 
         // don't forget to enable shader before setting uniforms
         ourShader.use();
-        pointLight.position = glm::vec3(4.0 * cos(currentFrame), 4.0f, 4.0 * sin(currentFrame));
+        //pointLight.position = glm::vec3(4.0 * cos(currentFrame), 4.0f, 4.0 * sin(currentFrame));
         ourShader.setVec3("pointLight.position", pointLight.position);
         ourShader.setVec3("pointLight.ambient", pointLight.ambient);
         ourShader.setVec3("pointLight.diffuse", pointLight.diffuse);
@@ -336,6 +337,9 @@ int main() {
         ourShader.setFloat("pointLight.quadratic", pointLight.quadratic);
         ourShader.setVec3("viewPosition", programState->camera.Position);
         ourShader.setFloat("material.shininess", 32.0f);
+
+
+
         // view/projection transformations
         glm::mat4 projection = glm::perspective(glm::radians(programState->camera.Zoom),
                                                 (float) SCR_WIDTH / (float) SCR_HEIGHT, 0.1f, 100.0f);
@@ -360,12 +364,10 @@ int main() {
 
         // render pirate2
         model = glm::mat4(1.0f); //inicijalizacija
-        model = glm::translate(model,programState->shipPosition); // translate it down so it's at the center of the scene
         model = glm:: translate(model, glm::vec3(3.2f, 3.81f, -3.6f));
         model = glm::rotate(model, glm::radians(270.0f), glm::vec3(1.0f, 0.0f, 0.0f));
         model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
         model = glm::scale(model, glm::vec3(0.04f, 0.04f, 0.04f));
-        model = glm::scale(model, glm::vec3(programState->shipScale));    // it's a bit too big for our scene, so scale it down
         ourShader.setMat4("model", model);
         pirate2.Draw(ourShader);
 
@@ -392,21 +394,29 @@ int main() {
         ourShader.setMat4("model", model);
         island.Draw(ourShader);
 
-//        //render skull
-//        model = glm::mat4(1.0f); //inicijalizacija
-//        model = glm::translate(model,programState->shipPosition); // translate it down so it's at the center of the scene
-//        model = glm:: translate(model, glm::vec3(-1.9f, 3.81f, 2.7f));
-//        model = glm::rotate(model, glm::radians(270.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-//        model = glm::rotate(model, glm::radians(-150.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-//        model = glm::scale(model, glm::vec3(0.02f, 0.02f, 0.02f));
-//        model = glm::scale(model, glm::vec3(programState->shipScale));    // it's a bit too big for our scene, so scale it down
-//        ourShader.setMat4("model", model);
-//        skull.Draw(ourShader);
+        // render treasure
+        model = glm::mat4(1.0f); //inicijalizacija
+        model = glm:: translate(model, glm::vec3(-3.22f, 6.6f, -12.9f));
+        model = glm::rotate(model, glm::radians(270.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+        model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+        model = glm::scale(model, glm::vec3(0.017f, 0.017f, 0.017f));
+        ourShader.setMat4("model", model);
+        treasure.Draw(ourShader);
+        model = glm::mat4(1.0f); //inicijalizacija
+        model = glm::translate(model,programState->shipPosition); // translate it down so it's at the center of the scene
+        model = glm:: translate(model, glm::vec3(3.22f, 6.6f, -12.9f));
+        model = glm::rotate(model, glm::radians(270.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+        model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+        model = glm::scale(model, glm::vec3(0.017f, 0.017f, 0.017f));
+        model = glm::scale(model, glm::vec3(programState->shipScale));    // it's a bit too big for our scene, so scale it down
+        ourShader.setMat4("model", model);
+        treasure.Draw(ourShader);
 
         // floor
-
         model = glm::mat4(1.0f);
-        model = glm::scale(model, glm::vec3(50, 0, 50));
+        model = glm::translate(model, glm::vec3(0.0f, 4.2f, -15.2f));
+        model = glm::rotate(model, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(2.0f, 2.0f, 2.0f));
         glBindVertexArray(planeVAO);
         glBindTexture(GL_TEXTURE_2D, floorTexture);
         ourShader.setMat4("model", model);
@@ -571,8 +581,10 @@ unsigned int loadTexture(char const * path)
         glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
         glGenerateMipmap(GL_TEXTURE_2D);
 
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, format == GL_RGBA ? GL_CLAMP_TO_EDGE : GL_REPEAT); // for this tutorial: use GL_CLAMP_TO_EDGE to prevent semi-transparent borders. Due to interpolation it takes texels from next repeat
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, format == GL_RGBA ? GL_CLAMP_TO_EDGE : GL_REPEAT);
+//        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, format == GL_RGBA ? GL_CLAMP_TO_EDGE : GL_REPEAT); // for this tutorial: use GL_CLAMP_TO_EDGE to prevent semi-transparent borders. Due to interpolation it takes texels from next repeat
+//        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, format == GL_RGBA ? GL_CLAMP_TO_EDGE : GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
