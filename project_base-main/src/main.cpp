@@ -174,11 +174,17 @@ int main() {
     Model pirate("resources/objects/pirate/14051_Pirate_Captain_v1_L1.obj");
     pirate.SetShaderTextureNamePrefix("material.");
 
+    Model pirate2("resources/objects/pirate2/14053_Pirate_Shipmate_Old_v1_L1.obj");
+    pirate2.SetShaderTextureNamePrefix("material.");
+
     Model cannon("resources/objects/cannon/14054_Pirate_Ship_Cannon_on_Cart_v1_l3.obj");
     cannon.SetShaderTextureNamePrefix("material.");
 
     Model island("resources/objects/island/island/island.obj");
     island.SetShaderTextureNamePrefix("material.");
+//
+//    Model skull("resources/objects/skull/skull.obj");
+//    skull.SetShaderTextureNamePrefix("material.");
 
     PointLight& pointLight = programState->pointLight;
     pointLight.position = glm::vec3(4.0f, 4.0, 0.0);
@@ -340,34 +346,62 @@ int main() {
         // render the loaded model pirateship
         glm::mat4 model = glm::mat4(1.0f); //inicijalizacija
         model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(1.2f, 1.2f, 1.2f));
         ourShader.setMat4("model", model);
         pirateShip.Draw(ourShader);
 
         // render pirate
         model = glm::mat4(1.0f); //inicijalizacija
-        model = glm:: translate(model, glm::vec3(0.5f, 5.6f, -9.0f));
+        model = glm:: translate(model, glm::vec3(0.5f, 6.72f, -10.6f));
         model = glm::rotate(model, glm::radians(270.0f), glm::vec3(1.0f, 0.0f, 0.0f));
         model = glm::scale(model, glm::vec3(0.017f, 0.017f, 0.017f));
         ourShader.setMat4("model", model);
         pirate.Draw(ourShader);
 
+        // render pirate2
+        model = glm::mat4(1.0f); //inicijalizacija
+        model = glm::translate(model,programState->shipPosition); // translate it down so it's at the center of the scene
+        model = glm:: translate(model, glm::vec3(3.2f, 3.81f, -3.6f));
+        model = glm::rotate(model, glm::radians(270.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+        model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+        model = glm::scale(model, glm::vec3(0.04f, 0.04f, 0.04f));
+        model = glm::scale(model, glm::vec3(programState->shipScale));    // it's a bit too big for our scene, so scale it down
+        ourShader.setMat4("model", model);
+        pirate2.Draw(ourShader);
+
         //cannon
         model = glm::mat4(1.0f); //inicijalizacija
-        model = glm:: translate(model, glm::vec3(2.0f, 3.17f, 0.8f));
+        model = glm:: translate(model, glm::vec3(1.9f, 3.81f, 2.7f));
         model = glm::rotate(model, glm::radians(270.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-        model = glm::scale(model, glm::vec3(0.017f, 0.017f, 0.017f));
+        model = glm::rotate(model, glm::radians(-28.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+        model = glm::scale(model, glm::vec3(0.022f, 0.022f, 0.022f));
+        ourShader.setMat4("model", model);
+        cannon.Draw(ourShader);
+        model = glm::mat4(1.0f); //inicijalizacija
+        model = glm:: translate(model, glm::vec3(-1.9f, 3.81f, 2.7f));
+        model = glm::rotate(model, glm::radians(270.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+        model = glm::rotate(model, glm::radians(-150.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+        model = glm::scale(model, glm::vec3(0.022f, 0.022f, 0.022f));
         ourShader.setMat4("model", model);
         cannon.Draw(ourShader);
 
         // render island
         model = glm::mat4(1.0f); //inicijalizacija
-        model = glm::translate(model,programState->shipPosition); // translate it down so it's at the center of the scene
         model = glm:: translate(model, glm::vec3(-28.0f, 0.0f, -83.0f));
-//        model = glm::rotate(model, glm::radians(270.0f), glm::vec3(1.0f, 0.0f, 0.0f));
         model = glm::scale(model, glm::vec3(0.4f, 0.4f, 0.4f));
-        model = glm::scale(model, glm::vec3(programState->shipScale));    // it's a bit too big for our scene, so scale it down
         ourShader.setMat4("model", model);
         island.Draw(ourShader);
+
+//        //render skull
+//        model = glm::mat4(1.0f); //inicijalizacija
+//        model = glm::translate(model,programState->shipPosition); // translate it down so it's at the center of the scene
+//        model = glm:: translate(model, glm::vec3(-1.9f, 3.81f, 2.7f));
+//        model = glm::rotate(model, glm::radians(270.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+//        model = glm::rotate(model, glm::radians(-150.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+//        model = glm::scale(model, glm::vec3(0.02f, 0.02f, 0.02f));
+//        model = glm::scale(model, glm::vec3(programState->shipScale));    // it's a bit too big for our scene, so scale it down
+//        ourShader.setMat4("model", model);
+//        skull.Draw(ourShader);
 
         // floor
 
