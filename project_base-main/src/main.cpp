@@ -32,7 +32,7 @@ const unsigned int SCR_HEIGHT = 600;
 
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
-bool firstMouse = true;
+bool firstMouse = false;
 
 // timing
 float deltaTime = 0.0f;
@@ -49,6 +49,14 @@ struct PointLight {
     float constant;
     float linear;
     float quadratic;
+};
+
+struct DirLight {
+    glm::vec3 direction;
+
+    glm::vec3 ambient;
+    glm::vec3 diffuse;
+    glm::vec3 specular;
 };
 
 struct ProgramState {
@@ -98,7 +106,6 @@ void ProgramState::LoadFromFile(std::string filename) {
 }
 
 ProgramState *programState;
-
 void DrawImGui(ProgramState *programState);
 
 int main() {
@@ -162,7 +169,7 @@ int main() {
 
     // build and compile shaders
     // -------------------------
-    Shader ourShader("resources/shaders/2.model_lighting.vs", "resources/shaders/2.model_lighting.fs");
+    Shader lightingShader("resources/shaders/2.model_lighting.vs", "resources/shaders/2.model_lighting.fs");
     Shader skyboxShader("resources/shaders/skybox.vs", "resources/shaders/skybox.fs");
 
     // load models
@@ -186,19 +193,49 @@ int main() {
     Model treasure("resources/objects/treasurechest/10803_TreasureChest_v2_L3.obj");
     treasure.SetShaderTextureNamePrefix("material.");
 
+    Model lamp("resources/objects/oillamp/lantern_obj.obj");
+    lamp.SetShaderTextureNamePrefix("material.");
+
+    Model ocean("resources/objects/oillamp/lantern_obj.obj");
+    lamp.SetShaderTextureNamePrefix("material.");
+
 
     PointLight& pointLight = programState->pointLight;
-    pointLight.position = glm::vec3(4.0f, 4.0, 0.0);
+    pointLight.position = glm::vec3(1.4f, 4.8f, -8.0f);
     pointLight.ambient = glm::vec3(0.2, 0.2, 0.2);
     pointLight.diffuse = glm::vec3(0.8, 0.8, 0.8);
     pointLight.specular = glm::vec3(1.0, 1.0, 1.0);
 
     pointLight.constant = 1.0f;
-    pointLight.linear = 0.0f;
-    pointLight.quadratic = 0.0f;
+    pointLight.linear = 0.09f;
+    pointLight.quadratic = 0.1f;
 
-    float planeVertices[] = {
+    PointLight pointLight2;
+    pointLight2.position = glm::vec3(-1.4f, 4.8f, -8.0f);
+    pointLight2.ambient = glm::vec3(0.2, 0.2, 0.2);
+    pointLight2.diffuse = glm::vec3(0.8, 0.8, 0.8);
+    pointLight2.specular = glm::vec3(1.0, 1.0, 1.0);
+
+    pointLight2.constant = 1.0f;
+    pointLight2.linear = 0.09f;
+    pointLight2.quadratic = 0.1f;
+
+
+
+
+    float skullFlag[] = {
                     // positions            //normals             // texture Coords
+            1.0f, -0.0f,  1.0f, 0.0f, 0.0f, 0.0f,  1.0f, 0.0f,
+            -1.0f, -0.0f,  1.0f,  0.0f, 0.0f, 0.0f,0.0f, 0.0f,
+            -1.0f, -0.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f,
+
+            1.0f, -0.0f,  1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f,
+            -1.0f, -0.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f,
+            1.0f, -0.0f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f
+    };
+
+    float water[] = {
+            // positions            //normals             // texture Coords
             1.0f, -0.0f,  1.0f, 0.0f, 0.0f, 0.0f,  1.0f, 0.0f,
             -1.0f, -0.0f,  1.0f,  0.0f, 0.0f, 0.0f,0.0f, 0.0f,
             -1.0f, -0.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f,
@@ -260,7 +297,14 @@ int main() {
     glGenBuffers(1, &planeVBO);
     glBindVertexArray(planeVAO);
     glBindBuffer(GL_ARRAY_BUFFER, planeVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(planeVertices), &planeVertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(skullFlag), &skullFlag, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+    glBufferData(GL_ARRAY_BUFFER, sizeof(water), &water, GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(1);
@@ -280,7 +324,8 @@ int main() {
 
 
     // loading textures
-    unsigned int floorTexture = loadTexture(FileSystem::getPath("resources/textures/pirateskull.png").c_str());
+    unsigned int flagTexture = loadTexture(FileSystem::getPath("resources/textures/pirateskull.png").c_str());
+    unsigned int waterTexture = loadTexture(FileSystem::getPath("resources/textures/water.jpg").c_str());
 
     // SkyBox textures and shader configuration
     vector<std::string> day
@@ -326,50 +371,73 @@ int main() {
 
 
         // don't forget to enable shader before setting uniforms
-        ourShader.use();
+        lightingShader.use();
         //pointLight.position = glm::vec3(4.0 * cos(currentFrame), 4.0f, 4.0 * sin(currentFrame));
-        ourShader.setVec3("pointLight.position", pointLight.position);
-        ourShader.setVec3("pointLight.ambient", pointLight.ambient);
-        ourShader.setVec3("pointLight.diffuse", pointLight.diffuse);
-        ourShader.setVec3("pointLight.specular", pointLight.specular);
-        ourShader.setFloat("pointLight.constant", pointLight.constant);
-        ourShader.setFloat("pointLight.linear", pointLight.linear);
-        ourShader.setFloat("pointLight.quadratic", pointLight.quadratic);
-        ourShader.setVec3("viewPosition", programState->camera.Position);
-        ourShader.setFloat("material.shininess", 32.0f);
+        lightingShader.setVec3("pointLight.position", pointLight.position);
+        lightingShader.setVec3("pointLight.ambient", pointLight.ambient);
+        lightingShader.setVec3("pointLight.diffuse", pointLight.diffuse);
+        lightingShader.setVec3("pointLight.specular", pointLight.specular);
+        lightingShader.setFloat("pointLight.constant", pointLight.constant);
+        lightingShader.setFloat("pointLight.linear", pointLight.linear);
+        lightingShader.setFloat("pointLight.quadratic", pointLight.quadratic);
+        lightingShader.setVec3("viewPosition", programState->camera.Position);
+        lightingShader.setFloat("material.shininess", 32.0f);
 
+        lightingShader.setVec3("pointLight2.position", pointLight2.position);
+        lightingShader.setVec3("pointLight2.ambient", pointLight2.ambient);
+        lightingShader.setVec3("pointLight2.diffuse", pointLight2.diffuse);
+        lightingShader.setVec3("pointLight2.specular", pointLight2.specular);
+        lightingShader.setFloat("pointLight2.constant", pointLight2.constant);
+        lightingShader.setFloat("pointLight2.linear", pointLight2.linear);
+        lightingShader.setFloat("pointLight2.quadratic", pointLight2.quadratic);
+        lightingShader.setVec3("viewPosition", programState->camera.Position);
+        lightingShader.setFloat("material.shininess", 32.0f);
 
+        if(dayNnite) {
+            // Dir Light
+            lightingShader.setVec3("dirLight.direction", -0.2f, -1.0f, -0.3f);
+            lightingShader.setVec3("dirLight.ambient", 0.4f, 0.4f, 0.4f);
+            lightingShader.setVec3("dirLight.diffuse", 0.7f, 0.7f, 0.7f);
+            lightingShader.setVec3("dirLight.specular", 0.8f, 0.8f, 0.8f);
+        }
+        else {
+            // Dir Light
+            lightingShader.setVec3("dirLight.direction", -0.2f, -1.0f, -0.3f);
+            lightingShader.setVec3("dirLight.ambient", 0.05f, 0.05f, 0.05f);
+            lightingShader.setVec3("dirLight.diffuse", 0.1f, 0.1f, 0.1f);
+            lightingShader.setVec3("dirLight.specular", 0.3f, 0.3f, 0.3f);
+        }
 
         // view/projection transformations
         glm::mat4 projection = glm::perspective(glm::radians(programState->camera.Zoom),
-                                                (float) SCR_WIDTH / (float) SCR_HEIGHT, 0.1f, 100.0f);
+                                                (float) SCR_WIDTH / (float) SCR_HEIGHT, 0.1f, 3000.0f);
         glm::mat4 view = programState->camera.GetViewMatrix();
-        ourShader.setMat4("projection", projection);
-        ourShader.setMat4("view", view);
+        lightingShader.setMat4("projection", projection);
+        lightingShader.setMat4("view", view);
 
         // render the loaded model pirateship
         glm::mat4 model = glm::mat4(1.0f); //inicijalizacija
         model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
         model = glm::scale(model, glm::vec3(1.2f, 1.2f, 1.2f));
-        ourShader.setMat4("model", model);
-        pirateShip.Draw(ourShader);
+        lightingShader.setMat4("model", model);
+        pirateShip.Draw(lightingShader);
 
         // render pirate
         model = glm::mat4(1.0f); //inicijalizacija
         model = glm:: translate(model, glm::vec3(0.5f, 6.72f, -10.6f));
         model = glm::rotate(model, glm::radians(270.0f), glm::vec3(1.0f, 0.0f, 0.0f));
         model = glm::scale(model, glm::vec3(0.017f, 0.017f, 0.017f));
-        ourShader.setMat4("model", model);
-        pirate.Draw(ourShader);
+        lightingShader.setMat4("model", model);
+        pirate.Draw(lightingShader);
 
         // render pirate2
         model = glm::mat4(1.0f); //inicijalizacija
-        model = glm:: translate(model, glm::vec3(3.2f, 3.81f, -3.6f));
+        model = glm:: translate(model, glm::vec3(-3.2f, 3.81f, -3.6f));
         model = glm::rotate(model, glm::radians(270.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-        model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+        model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
         model = glm::scale(model, glm::vec3(0.04f, 0.04f, 0.04f));
-        ourShader.setMat4("model", model);
-        pirate2.Draw(ourShader);
+        lightingShader.setMat4("model", model);
+        pirate2.Draw(lightingShader);
 
         //cannon
         model = glm::mat4(1.0f); //inicijalizacija
@@ -377,22 +445,22 @@ int main() {
         model = glm::rotate(model, glm::radians(270.0f), glm::vec3(1.0f, 0.0f, 0.0f));
         model = glm::rotate(model, glm::radians(-28.0f), glm::vec3(0.0f, 0.0f, 1.0f));
         model = glm::scale(model, glm::vec3(0.022f, 0.022f, 0.022f));
-        ourShader.setMat4("model", model);
-        cannon.Draw(ourShader);
+        lightingShader.setMat4("model", model);
+        cannon.Draw(lightingShader);
         model = glm::mat4(1.0f); //inicijalizacija
         model = glm:: translate(model, glm::vec3(-1.9f, 3.81f, 2.7f));
         model = glm::rotate(model, glm::radians(270.0f), glm::vec3(1.0f, 0.0f, 0.0f));
         model = glm::rotate(model, glm::radians(-150.0f), glm::vec3(0.0f, 0.0f, 1.0f));
         model = glm::scale(model, glm::vec3(0.022f, 0.022f, 0.022f));
-        ourShader.setMat4("model", model);
-        cannon.Draw(ourShader);
+        lightingShader.setMat4("model", model);
+        cannon.Draw(lightingShader);
 
         // render island
         model = glm::mat4(1.0f); //inicijalizacija
         model = glm:: translate(model, glm::vec3(-28.0f, 0.0f, -83.0f));
         model = glm::scale(model, glm::vec3(0.4f, 0.4f, 0.4f));
-        ourShader.setMat4("model", model);
-        island.Draw(ourShader);
+        lightingShader.setMat4("model", model);
+        island.Draw(lightingShader);
 
         // render treasure
         model = glm::mat4(1.0f); //inicijalizacija
@@ -400,26 +468,47 @@ int main() {
         model = glm::rotate(model, glm::radians(270.0f), glm::vec3(1.0f, 0.0f, 0.0f));
         model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
         model = glm::scale(model, glm::vec3(0.017f, 0.017f, 0.017f));
-        ourShader.setMat4("model", model);
-        treasure.Draw(ourShader);
+        lightingShader.setMat4("model", model);
+        treasure.Draw(lightingShader);
         model = glm::mat4(1.0f); //inicijalizacija
-        model = glm::translate(model,programState->shipPosition); // translate it down so it's at the center of the scene
         model = glm:: translate(model, glm::vec3(3.22f, 6.6f, -12.9f));
         model = glm::rotate(model, glm::radians(270.0f), glm::vec3(1.0f, 0.0f, 0.0f));
         model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
         model = glm::scale(model, glm::vec3(0.017f, 0.017f, 0.017f));
-        model = glm::scale(model, glm::vec3(programState->shipScale));    // it's a bit too big for our scene, so scale it down
-        ourShader.setMat4("model", model);
-        treasure.Draw(ourShader);
+        lightingShader.setMat4("model", model);
+        treasure.Draw(lightingShader);
 
-        // floor
+        // render lamp
+        model = glm::mat4(1.0f); //inicijalizacija
+        model = glm:: translate(model, glm::vec3(1.4f, 4.6f, -8.0f));
+        model = glm::scale(model, glm::vec3(0.01f, 0.01f, 0.01f));
+        lightingShader.setMat4("model", model);
+        lamp.Draw(lightingShader);
+        model = glm::mat4(1.0f); //inicijalizacija
+        model = glm:: translate(model, glm::vec3(-1.4f, 4.6f, -8.0f));
+        model = glm::scale(model, glm::vec3(0.01f, 0.01f, 0.01f));
+        lightingShader.setMat4("model", model);
+        lamp.Draw(lightingShader);
+
+        // flag
         model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(0.0f, 4.2f, -15.2f));
         model = glm::rotate(model, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
         model = glm::scale(model, glm::vec3(2.0f, 2.0f, 2.0f));
         glBindVertexArray(planeVAO);
-        glBindTexture(GL_TEXTURE_2D, floorTexture);
-        ourShader.setMat4("model", model);
+        glBindTexture(GL_TEXTURE_2D, flagTexture);
+        lightingShader.setMat4("model", model);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+
+        // water
+        model = glm::mat4(1.0f);
+        model = glm::translate(model,programState->shipPosition); // translate it down so it's at the center of the scene
+        model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(20000.0f, 20000.0f, 20000.0f));
+        model = glm::scale(model, glm::vec3(programState->shipScale));    // it's a bit too big for our scene, so scale it down
+        glBindVertexArray(planeVAO);
+        glBindTexture(GL_TEXTURE_2D, waterTexture);
+        lightingShader.setMat4("model", model);
         glDrawArrays(GL_TRIANGLES, 0, 6);
 
         // draw skybox as last
