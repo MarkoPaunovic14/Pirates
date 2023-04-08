@@ -25,8 +25,8 @@ unsigned int loadTexture(char const * path);
 unsigned int loadCubemap(vector<std::string> faces);
 
 // settings
-const unsigned int SCR_WIDTH = 800;
-const unsigned int SCR_HEIGHT = 600;
+const unsigned int SCR_WIDTH = 1200;
+const unsigned int SCR_HEIGHT = 1050;
 
 // camera
 
@@ -167,6 +167,11 @@ int main() {
     // -----------------------------
     glEnable(GL_DEPTH_TEST);
 
+    // Face culling
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_FRONT);
+
+
     // build and compile shaders
     // -------------------------
     Shader lightingShader("resources/shaders/2.model_lighting.vs", "resources/shaders/2.model_lighting.fs");
@@ -199,26 +204,35 @@ int main() {
     Model ocean("resources/objects/oillamp/lantern_obj.obj");
     lamp.SetShaderTextureNamePrefix("material.");
 
+    Model table("resources/objects/table/Old wooden table.obj");
+    table.SetShaderTextureNamePrefix("material.");
 
-    PointLight& pointLight = programState->pointLight;
-    pointLight.position = glm::vec3(1.4f, 4.8f, -8.0f);
-    pointLight.ambient = glm::vec3(0.2, 0.2, 0.2);
-    pointLight.diffuse = glm::vec3(0.8, 0.8, 0.8);
-    pointLight.specular = glm::vec3(1.0, 1.0, 1.0);
+    Model beer("resources/objects/beer/Beer_Bottle.obj");
+    beer.SetShaderTextureNamePrefix("material.");
 
-    pointLight.constant = 1.0f;
-    pointLight.linear = 0.09f;
-    pointLight.quadratic = 0.1f;
+    Model chair("resources/objects/chair/Simple_Wooden_Chair.obj");
+    chair.SetShaderTextureNamePrefix("material.");
 
-    PointLight pointLight2;
-    pointLight2.position = glm::vec3(-1.4f, 4.8f, -8.0f);
-    pointLight2.ambient = glm::vec3(0.2, 0.2, 0.2);
-    pointLight2.diffuse = glm::vec3(0.8, 0.8, 0.8);
-    pointLight2.specular = glm::vec3(1.0, 1.0, 1.0);
 
-    pointLight2.constant = 1.0f;
-    pointLight2.linear = 0.09f;
-    pointLight2.quadratic = 0.1f;
+//    PointLight& pointLight = programState->pointLight;
+//    pointLight.position = glm::vec3(1.4f, 4.8f, -8.0f);
+//    pointLight.ambient = glm::vec3(0.2, 0.2, 0.2);
+//    pointLight.diffuse = glm::vec3(0.8, 0.8, 0.8);
+//    pointLight.specular = glm::vec3(1.0, 1.0, 1.0);
+//
+//    pointLight.constant = 1.0f;
+//    pointLight.linear = 0.09f;
+//    pointLight.quadratic = 0.1f;
+//
+//    PointLight pointLight2;
+//    pointLight2.position = glm::vec3(-1.4f, 4.8f, -8.0f);
+//    pointLight2.ambient = glm::vec3(0.2, 0.2, 0.2);
+//    pointLight2.diffuse = glm::vec3(0.8, 0.8, 0.8);
+//    pointLight2.specular = glm::vec3(1.0, 1.0, 1.0);
+//
+//    pointLight2.constant = 1.0f;
+//    pointLight2.linear = 0.09f;
+//    pointLight2.quadratic = 0.1f;
 
 
 
@@ -351,6 +365,11 @@ int main() {
     unsigned int cubemapTextureNight = loadCubemap(night);
     skyboxShader.use();
     skyboxShader.setInt("skybox", 0);
+
+    lightingShader.use();
+    lightingShader.setInt("material.texture_diffuse1", 0);
+    lightingShader.setInt("material.texture_specular1", 1);
+
     // render loop
     // -----------
     while (!glfwWindowShouldClose(window)) {
@@ -373,36 +392,120 @@ int main() {
         // don't forget to enable shader before setting uniforms
         lightingShader.use();
         //pointLight.position = glm::vec3(4.0 * cos(currentFrame), 4.0f, 4.0 * sin(currentFrame));
-        lightingShader.setVec3("pointLight.position", pointLight.position);
-        lightingShader.setVec3("pointLight.ambient", pointLight.ambient);
-        lightingShader.setVec3("pointLight.diffuse", pointLight.diffuse);
-        lightingShader.setVec3("pointLight.specular", pointLight.specular);
-        lightingShader.setFloat("pointLight.constant", pointLight.constant);
-        lightingShader.setFloat("pointLight.linear", pointLight.linear);
-        lightingShader.setFloat("pointLight.quadratic", pointLight.quadratic);
+//        lightingShader.setVec3("pointLight.position", pointLight.position);
+//        lightingShader.setVec3("pointLight.ambient", pointLight.ambient);
+//        lightingShader.setVec3("pointLight.diffuse", pointLight.diffuse);
+//        lightingShader.setVec3("pointLight.specular", pointLight.specular);
+//        lightingShader.setFloat("pointLight.constant", pointLight.constant);
+//        lightingShader.setFloat("pointLight.linear", pointLight.linear);
+//        lightingShader.setFloat("pointLight.quadratic", pointLight.quadratic);
+//        lightingShader.setVec3("viewPosition", programState->camera.Position);
+//        lightingShader.setFloat("material.shininess", 32.0f);
+//
+//        lightingShader.setVec3("pointLight2.position", pointLight2.position);
+//        lightingShader.setVec3("pointLight2.ambient", pointLight2.ambient);
+//        lightingShader.setVec3("pointLight2.diffuse", pointLight2.diffuse);
+//        lightingShader.setVec3("pointLight2.specular", pointLight2.specular);
+//        lightingShader.setFloat("pointLight2.constant", pointLight2.constant);
+//        lightingShader.setFloat("pointLight2.linear", pointLight2.linear);
+//        lightingShader.setFloat("pointLight2.quadratic", pointLight2.quadratic);
+//        lightingShader.setVec3("viewPosition", programState->camera.Position);
+//        lightingShader.setFloat("material.shininess", 32.0f);
+
+        lightingShader.setVec3("pointLight3.position", -3.22f, 6.6f, -12.9f);
+        lightingShader.setVec3("pointLight3.ambient", 0.3, 0.06, 0.0);
+        lightingShader.setVec3("pointLight3.diffuse", 1.0, 0.72, 0.11);
+        lightingShader.setVec3("pointLight3.specular", 1.0, 0.72, 0.11);
+        lightingShader.setFloat("pointLight3.constant", 1);
+        lightingShader.setFloat("pointLight3.linear", 0.09f);
+        lightingShader.setFloat("pointLight3.quadratic", 0.5f);
         lightingShader.setVec3("viewPosition", programState->camera.Position);
         lightingShader.setFloat("material.shininess", 32.0f);
 
-        lightingShader.setVec3("pointLight2.position", pointLight2.position);
-        lightingShader.setVec3("pointLight2.ambient", pointLight2.ambient);
-        lightingShader.setVec3("pointLight2.diffuse", pointLight2.diffuse);
-        lightingShader.setVec3("pointLight2.specular", pointLight2.specular);
-        lightingShader.setFloat("pointLight2.constant", pointLight2.constant);
-        lightingShader.setFloat("pointLight2.linear", pointLight2.linear);
-        lightingShader.setFloat("pointLight2.quadratic", pointLight2.quadratic);
+        lightingShader.setVec3("pointLight4.position", 3.22f, 6.6f, -12.9f);
+        lightingShader.setVec3("pointLight4.ambient", 0.3, 0.06, 0.0);
+        lightingShader.setVec3("pointLight4.diffuse", 1.0, 0.72, 0.11);
+        lightingShader.setVec3("pointLight4.specular", 1.0, 0.72, 0.11);
+        lightingShader.setFloat("pointLight4.constant", 1);
+        lightingShader.setFloat("pointLight4.linear", 0.09f);
+        lightingShader.setFloat("pointLight4.quadratic", 0.5f);
         lightingShader.setVec3("viewPosition", programState->camera.Position);
         lightingShader.setFloat("material.shininess", 32.0f);
+
 
         if(dayNnite) {
+            // Point light
+
+            lightingShader.setVec3("pointLight1.position", 1.4f, 4.8f, -8.0f);
+            lightingShader.setVec3("pointLight1.ambient", 0, 0, 0);
+            lightingShader.setVec3("pointLight1.diffuse", 0, 0, 0);
+            lightingShader.setVec3("pointLight1.specular", 0, 0, 0);
+            lightingShader.setFloat("pointLight1.constant", 1);
+            lightingShader.setFloat("pointLight1.linear", 0.09f);
+            lightingShader.setFloat("pointLight1.quadratic", 0.1f);
+            lightingShader.setVec3("viewPosition", programState->camera.Position);
+            lightingShader.setFloat("material.shininess", 32.0f);
+
+            lightingShader.setVec3("pointLight2.position", -1.4f, 4.8f, -8.0f);
+            lightingShader.setVec3("pointLight2.ambient", 0, 0, 0);
+            lightingShader.setVec3("pointLight2.diffuse", 0, 0, 0);
+            lightingShader.setVec3("pointLight2.specular", 0, 0, 0);
+            lightingShader.setFloat("pointLight2.constant", 1);
+            lightingShader.setFloat("pointLight2.linear", 0.09f);
+            lightingShader.setFloat("pointLight2.quadratic", 0.1f);
+            lightingShader.setVec3("viewPosition", programState->camera.Position);
+            lightingShader.setFloat("material.shininess", 32.0f);
+
+            lightingShader.setVec3("pointLight5.position", -37.5f, 23.0f, -100.0f);
+            lightingShader.setVec3("pointLight5.ambient", 0, 0, 0);
+            lightingShader.setVec3("pointLight5.diffuse", 0, 0, 0);
+            lightingShader.setVec3("pointLight5.specular", 0, 0, 0);
+            lightingShader.setFloat("pointLight5.constant", 1);
+            lightingShader.setFloat("pointLight5.linear", 0.0f);
+            lightingShader.setFloat("pointLight5.quadratic", 0.1f);
+            lightingShader.setVec3("viewPosition", programState->camera.Position);
+            lightingShader.setFloat("material.shininess", 32.0f);
+
             // Dir Light
-            lightingShader.setVec3("dirLight.direction", -0.2f, -1.0f, -0.3f);
+            lightingShader.setVec3("dirLight.direction", 0.7f, -0.5f, -0.5f);
             lightingShader.setVec3("dirLight.ambient", 0.4f, 0.4f, 0.4f);
             lightingShader.setVec3("dirLight.diffuse", 0.7f, 0.7f, 0.7f);
             lightingShader.setVec3("dirLight.specular", 0.8f, 0.8f, 0.8f);
         }
         else {
+            // Point light 255,184,28
+            lightingShader.setVec3("pointLight1.position", 1.4f, 4.8f, -8.0f);
+            lightingShader.setVec3("pointLight1.ambient", 0.3, 0.06, 0.0);
+            lightingShader.setVec3("pointLight1.diffuse", 1.0, 0.72, 0.11);
+            lightingShader.setVec3("pointLight1.specular", 1.0, 0.72, 0.11);
+            lightingShader.setFloat("pointLight1.constant", 1);
+            lightingShader.setFloat("pointLight1.linear", 0.09f);
+            lightingShader.setFloat("pointLight1.quadratic", 0.1f);
+            lightingShader.setVec3("viewPosition", programState->camera.Position);
+            lightingShader.setFloat("material.shininess", 32.0f);
+
+            lightingShader.setVec3("pointLight2.position", -1.4f, 4.8f, -8.0f);
+            lightingShader.setVec3("pointLight2.ambient", 0.3, 0.06, 0.0);
+            lightingShader.setVec3("pointLight2.diffuse", 1.0, 0.72, 0.11);
+            lightingShader.setVec3("pointLight2.specular", 1.0, 0.72, 0.11);
+            lightingShader.setFloat("pointLight2.constant", 1);
+            lightingShader.setFloat("pointLight2.linear", 0.09f);
+            lightingShader.setFloat("pointLight2.quadratic", 0.1f);
+            lightingShader.setVec3("viewPosition", programState->camera.Position);
+            lightingShader.setFloat("material.shininess", 32.0f);
+
+            lightingShader.setVec3("pointLight5.position", -37.5f, 23.0f, -100.0f);
+            lightingShader.setVec3("pointLight5.ambient", 0.3, 0.06, 0.0);
+            lightingShader.setVec3("pointLight5.diffuse", 1.0, 0.72, 0.11);
+            lightingShader.setVec3("pointLight5.specular", 1.0, 0.72, 0.11);
+            lightingShader.setFloat("pointLight5.constant", 1);
+            lightingShader.setFloat("pointLight5.linear", 0.0f);
+            lightingShader.setFloat("pointLight5.quadratic", 0.1f);
+            lightingShader.setVec3("viewPosition", programState->camera.Position);
+            lightingShader.setFloat("material.shininess", 32.0f);
+
             // Dir Light
-            lightingShader.setVec3("dirLight.direction", -0.2f, -1.0f, -0.3f);
+            lightingShader.setVec3("dirLight.direction", -0.3f, -0.9f, -0.25f);
             lightingShader.setVec3("dirLight.ambient", 0.05f, 0.05f, 0.05f);
             lightingShader.setVec3("dirLight.diffuse", 0.1f, 0.1f, 0.1f);
             lightingShader.setVec3("dirLight.specular", 0.3f, 0.3f, 0.3f);
@@ -415,6 +518,7 @@ int main() {
         lightingShader.setMat4("projection", projection);
         lightingShader.setMat4("view", view);
 
+        glDisable(GL_CULL_FACE);
         // render the loaded model pirateship
         glm::mat4 model = glm::mat4(1.0f); //inicijalizacija
         model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
@@ -432,7 +536,7 @@ int main() {
 
         // render pirate2
         model = glm::mat4(1.0f); //inicijalizacija
-        model = glm:: translate(model, glm::vec3(-3.2f, 3.81f, -3.6f));
+        model = glm:: translate(model, glm::vec3(3.2f, 3.81f, -3.6f));
         model = glm::rotate(model, glm::radians(270.0f), glm::vec3(1.0f, 0.0f, 0.0f));
         model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
         model = glm::scale(model, glm::vec3(0.04f, 0.04f, 0.04f));
@@ -457,8 +561,8 @@ int main() {
 
         // render island
         model = glm::mat4(1.0f); //inicijalizacija
-        model = glm:: translate(model, glm::vec3(-28.0f, 0.0f, -83.0f));
-        model = glm::scale(model, glm::vec3(0.4f, 0.4f, 0.4f));
+        model = glm:: translate(model, glm::vec3(-28.0f, 0.0f, -111.0f));
+        model = glm::scale(model, glm::vec3(0.6f, 0.6f, 0.6f));
         lightingShader.setMat4("model", model);
         island.Draw(lightingShader);
 
@@ -489,6 +593,48 @@ int main() {
         model = glm::scale(model, glm::vec3(0.01f, 0.01f, 0.01f));
         lightingShader.setMat4("model", model);
         lamp.Draw(lightingShader);
+        model = glm::mat4(1.0f); //inicijalizacija
+        model = glm:: translate(model, glm::vec3(-37.5f, 22.65f, -100.0f));
+        model = glm::scale(model, glm::vec3(0.017f, 0.017f, 0.017f));
+        lightingShader.setMat4("model", model);
+        lamp.Draw(lightingShader);
+
+        // table
+        model = glm::mat4(1.0f); //inicijalizacija
+
+        model = glm:: translate(model, glm::vec3(-37.0f, 20.0f, -100.0f));
+        model = glm::rotate(model, glm::radians(-15.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.5f, 0.3f, 0.4f));
+        lightingShader.setMat4("model", model);
+        table.Draw(lightingShader);
+
+        // beer
+        model = glm::mat4(1.0f); //inicijalizacija
+        model = glm:: translate(model, glm::vec3(-35.0f, 22.6f, -99.5f));
+        model = glm::rotate(model, glm::radians(120.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));
+        lightingShader.setMat4("model", model);
+        beer.Draw(lightingShader);
+        model = glm::mat4(1.0f); //inicijalizacija
+        model = glm:: translate(model, glm::vec3(-38.5f, 22.6f, -101.1f));
+        model = glm::rotate(model, glm::radians(170.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));
+        lightingShader.setMat4("model", model);
+        beer.Draw(lightingShader);
+
+        // chair
+        model = glm::mat4(1.0f); //inicijalizacija
+        model = glm:: translate(model, glm::vec3(-38.0f, 20.0f, -104.0f));
+        model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(4.0f, 4.0f, 4.0f));
+        lightingShader.setMat4("model", model);
+        chair.Draw(lightingShader);
+        model = glm::mat4(1.0f); //inicijalizacija
+        model = glm:: translate(model, glm::vec3(-33.5f, 20.0f, -98.0f));
+        model = glm::rotate(model, glm::radians(165.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(4.0f, 4.0f, 4.0f));
+        lightingShader.setMat4("model", model);
+        chair.Draw(lightingShader);
 
         // flag
         model = glm::mat4(1.0f);
@@ -500,16 +646,17 @@ int main() {
         lightingShader.setMat4("model", model);
         glDrawArrays(GL_TRIANGLES, 0, 6);
 
+        glEnable(GL_CULL_FACE);
         // water
         model = glm::mat4(1.0f);
-        model = glm::translate(model,programState->shipPosition); // translate it down so it's at the center of the scene
         model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
         model = glm::scale(model, glm::vec3(20000.0f, 20000.0f, 20000.0f));
-        model = glm::scale(model, glm::vec3(programState->shipScale));    // it's a bit too big for our scene, so scale it down
+
         glBindVertexArray(planeVAO);
         glBindTexture(GL_TEXTURE_2D, waterTexture);
         lightingShader.setMat4("model", model);
         glDrawArrays(GL_TRIANGLES, 0, 6);
+        glDisable(GL_CULL_FACE);
 
         // draw skybox as last
         glDepthMask(GL_FALSE);

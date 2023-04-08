@@ -31,8 +31,11 @@ in vec2 TexCoords;
 in vec3 Normal;
 in vec3 FragPos;
 
-uniform PointLight pointLight;
+uniform PointLight pointLight1; // oil lamp
 uniform PointLight pointLight2;
+uniform PointLight pointLight3; // treasure
+uniform PointLight pointLight4;
+uniform PointLight pointLight5;
 uniform DirLight dirLight;
 uniform Material material;
 
@@ -78,6 +81,11 @@ void main()
 {
     vec3 normal = normalize(Normal);
     vec3 viewDir = normalize(viewPosition - FragPos);
-    vec3 result = CalcPointLight(pointLight, normal, FragPos, viewDir) + CalcPointLight(pointLight2, normal, FragPos, viewDir) + CalcDirLight(dirLight, normal, viewDir);
+    vec3 result = CalcPointLight(pointLight1, normal, FragPos, viewDir) +
+                    CalcPointLight(pointLight2, normal, FragPos, viewDir) +
+                    CalcPointLight(pointLight3, normal, FragPos, viewDir) +
+                    CalcPointLight(pointLight4, normal, FragPos, viewDir) +
+                    CalcPointLight(pointLight5, normal, FragPos, viewDir) +
+                    CalcDirLight(dirLight, normal, viewDir);
     FragColor = vec4(result, 1.0);
 }
