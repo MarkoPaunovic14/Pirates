@@ -176,6 +176,7 @@ int main() {
     // -------------------------
     Shader lightingShader("resources/shaders/2.model_lighting.vs", "resources/shaders/2.model_lighting.fs");
     Shader skyboxShader("resources/shaders/skybox.vs", "resources/shaders/skybox.fs");
+    Shader blendingShader("resources/shaders/blending.vs", "resources/shaders/blending.fs");
 
     // load models
     // -----------
@@ -259,6 +260,16 @@ int main() {
             1.0f, -0.0f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f
     };
 
+    float grass[] = {
+            0.0f,  0.5f,  0.0f,  0.0f,  0.0f,
+            0.0f, -0.5f,  0.0f,  0.0f,  1.0f,
+            1.0f, -0.5f,  0.0f,  1.0f,  1.0f,
+
+            0.0f,  0.5f,  0.0f,  0.0f,  0.0f,
+            1.0f, -0.5f,  0.0f,  1.0f,  1.0f,
+            1.0f,  0.5f,  0.0f,  1.0f,  0.0f
+    };
+
     // SkyBox
     float skyboxVertices[] = {
             // positions
@@ -311,6 +322,7 @@ int main() {
     glGenBuffers(1, &planeVBO);
     glBindVertexArray(planeVAO);
     glBindBuffer(GL_ARRAY_BUFFER, planeVBO);
+
     glBufferData(GL_ARRAY_BUFFER, sizeof(skullFlag), &skullFlag, GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
@@ -318,6 +330,7 @@ int main() {
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(2);
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+
     glBufferData(GL_ARRAY_BUFFER, sizeof(water), &water, GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
@@ -325,6 +338,19 @@ int main() {
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(2);
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+
+    // grass VAO
+    unsigned int grassVAO, grassVBO;
+    glGenVertexArrays(1, &grassVAO);
+    glGenBuffers(1, &grassVBO);
+    glBindVertexArray(grassVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, grassVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(grass), &grass, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+
 
     // SkyBox VAO
     unsigned int skyboxVAO, skyboxVBO;
@@ -340,6 +366,7 @@ int main() {
     // loading textures
     unsigned int flagTexture = loadTexture(FileSystem::getPath("resources/textures/pirateskull.png").c_str());
     unsigned int waterTexture = loadTexture(FileSystem::getPath("resources/textures/water.jpg").c_str());
+    unsigned int grassTexture = loadTexture(FileSystem::getPath("resources/textures/grass.png").c_str());
 
     // SkyBox textures and shader configuration
     vector<std::string> day
@@ -368,7 +395,10 @@ int main() {
 
     lightingShader.use();
     lightingShader.setInt("material.texture_diffuse1", 0);
-    lightingShader.setInt("material.texture_specular1", 1);
+//    lightingShader.setInt("material.texture_specular1", 1);
+
+    blendingShader.use();
+    blendingShader.setInt("texture1", 0);
 
     // render loop
     // -----------
@@ -412,6 +442,8 @@ int main() {
 //        lightingShader.setVec3("viewPosition", programState->camera.Position);
 //        lightingShader.setFloat("material.shininess", 32.0f);
 
+
+        //treasure lighting
         lightingShader.setVec3("pointLight3.position", -3.22f, 6.6f, -12.9f);
         lightingShader.setVec3("pointLight3.ambient", 0.3, 0.06, 0.0);
         lightingShader.setVec3("pointLight3.diffuse", 1.0, 0.72, 0.11);
@@ -471,6 +503,12 @@ int main() {
             lightingShader.setVec3("dirLight.ambient", 0.4f, 0.4f, 0.4f);
             lightingShader.setVec3("dirLight.diffuse", 0.7f, 0.7f, 0.7f);
             lightingShader.setVec3("dirLight.specular", 0.8f, 0.8f, 0.8f);
+
+            blendingShader.use();
+            blendingShader.setVec3("dirLight.direction", 0.7f, -0.5f, -0.5f);
+            blendingShader.setVec3("dirLight.ambient", 0.4f, 0.4f, 0.4f);
+            blendingShader.setVec3("dirLight.diffuse", 0.7f, 0.7f, 0.7f);
+            blendingShader.setVec3("dirLight.specular", 0.8f, 0.8f, 0.8f);
         }
         else {
             // Point light 255,184,28
@@ -509,8 +547,15 @@ int main() {
             lightingShader.setVec3("dirLight.ambient", 0.05f, 0.05f, 0.05f);
             lightingShader.setVec3("dirLight.diffuse", 0.1f, 0.1f, 0.1f);
             lightingShader.setVec3("dirLight.specular", 0.3f, 0.3f, 0.3f);
+
+            blendingShader.use();
+            blendingShader.setVec3("dirLight.direction", -0.3f, -0.9f, -0.25f);
+            blendingShader.setVec3("dirLight.ambient", 0.05f, 0.05f, 0.05f);
+            blendingShader.setVec3("dirLight.diffuse", 0.1f, 0.1f, 0.1f);
+            blendingShader.setVec3("dirLight.specular", 0.3f, 0.3f, 0.3f);
         }
 
+        lightingShader.use();
         // view/projection transformations
         glm::mat4 projection = glm::perspective(glm::radians(programState->camera.Zoom),
                                                 (float) SCR_WIDTH / (float) SCR_HEIGHT, 0.1f, 3000.0f);
@@ -649,7 +694,6 @@ int main() {
         glEnable(GL_CULL_FACE);
         // water
         model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
         model = glm::scale(model, glm::vec3(20000.0f, 20000.0f, 20000.0f));
 
         glBindVertexArray(planeVAO);
@@ -657,6 +701,23 @@ int main() {
         lightingShader.setMat4("model", model);
         glDrawArrays(GL_TRIANGLES, 0, 6);
         glDisable(GL_CULL_FACE);
+
+        // gras
+        blendingShader.use();
+        blendingShader.setMat4("view", view);
+        blendingShader.setMat4("projection", projection);
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, programState->shipPosition);
+        model = glm::translate(model, glm::vec3(34.4f, 9.0f, -58.5f));
+        model = glm::scale(model, glm::vec3(3.0f, 3.0f, 3.0f));
+        model = glm::scale(model, glm::vec3(programState->shipScale));
+
+        glBindVertexArray(grassVAO);
+        glBindTexture(GL_TEXTURE_2D, grassTexture);
+        blendingShader.setMat4("model", model);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+
+
 
         // draw skybox as last
         glDepthMask(GL_FALSE);
@@ -695,6 +756,12 @@ int main() {
     ImGui::DestroyContext();
     // glfw: terminate, clearing all previously allocated GLFW resources.
     // ------------------------------------------------------------------
+    glDeleteVertexArrays(1, &planeVAO);
+    glDeleteVertexArrays(1, &skyboxVAO);
+    glDeleteVertexArrays(1, &grassVAO);
+    glDeleteBuffers(1, &planeVBO);
+    glDeleteBuffers(1, &skyboxVBO);
+    glDeleteBuffers(1, &grassVBO);
     glfwTerminate();
     return 0;
 }
