@@ -1,0 +1,18 @@
+newmtl StingrayPBS1SG
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+Ni 0.00
+    map_Kd /textures/texture2.jpeg
+    map_Ks /textures/lantern_Roughness.jpg
+    map_Ks /textures/lantern_Metallic.jpg
+newmtl StingrayPBS2SG
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+Ni 0.00
+    map_Kd /textures/texture2.jpeg
+    map_Ks /textures/lantern_Roughness.jpg
+    map_Ks /textures/lantern_Metallic.jpg

@@ -22,11 +22,15 @@ void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
 void processInput(GLFWwindow *window);
 void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods);
 unsigned int loadTexture(char const * path);
+unsigned int loadTexture(char const * path, bool gammaCorrection);
 unsigned int loadCubemap(vector<std::string> faces);
 
 // settings
 const unsigned int SCR_WIDTH = 1200;
 const unsigned int SCR_HEIGHT = 1050;
+bool bloom = true;
+bool bloomKeyPressed = false;
+float exposure = 1.0f;
 
 // camera
 
@@ -124,7 +128,7 @@ int main() {
 
     // glfw window creation
     // --------------------
-    GLFWwindow *window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", NULL, NULL);
+    GLFWwindow *window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "", NULL, NULL);
     if (window == NULL) {
         std::cout << "Failed to create GLFW window" << std::endl;
         glfwTerminate();
@@ -176,10 +180,12 @@ int main() {
 
     // build and compile shaders
     // -------------------------
-    Shader lightingShader("resources/shaders/2.model_lighting.vs", "resources/shaders/2.model_lighting.fs");
+    Shader lightingShader("resources/shaders/lighting.vs", "resources/shaders/lighting.fs");
     Shader skyboxShader("resources/shaders/skybox.vs", "resources/shaders/skybox.fs");
     Shader blendingShader("resources/shaders/blending.vs", "resources/shaders/blending.fs");
     Shader lightCubeShader("resources/shaders/lightCube.vs", "resources/shaders/lightCube.fs");
+    Shader blurShader("resources/shaders/blur.vs", "resources/shaders/blur.fs");
+    Shader bloomShader("resources/shaders/bloom.vs", "resources/shaders/bloom.fs");
 
     // load models
     // -----------
@@ -205,14 +211,14 @@ int main() {
     Model lamp("resources/objects/oillamp/lantern_obj.obj");
     lamp.SetShaderTextureNamePrefix("material.");
 
-    Model ocean("resources/objects/oillamp/lantern_obj.obj");
-    lamp.SetShaderTextureNamePrefix("material.");
+    Model nightlamp("resources/objects/oillampnight/lantern_obj.obj");
+    nightlamp.SetShaderTextureNamePrefix("material.");
 
     Model table("resources/objects/table/Old wooden table.obj");
     table.SetShaderTextureNamePrefix("material.");
 
-    Model beer("resources/objects/beer/Beer_Bottle.obj");
-    beer.SetShaderTextureNamePrefix("material.");
+    Model zajecarac("resources/objects/zajecarac/Beer_Bottle.obj");
+    zajecarac.SetShaderTextureNamePrefix("material.");
 
     Model chair("resources/objects/chair/Simple_Wooden_Chair.obj");
     chair.SetShaderTextureNamePrefix("material.");
@@ -366,6 +372,67 @@ int main() {
             1.0f, -1.0f,  1.0f
     };
 
+    float quadVertices[] = {
+            // positions        // texture Coords
+            -1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
+            -1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+            1.0f,  1.0f, 0.0f, 1.0f, 1.0f,
+            1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+    };
+
+//    // configure (floating point) framebuffers
+//    // ---------------------------------------
+//    unsigned int hdrFBO;
+//    glGenFramebuffers(1, &hdrFBO);
+//    glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO);
+//    // create 2 floating point color buffers (1 for normal rendering, other for brightness threshold values)
+//    unsigned int colorBuffers[2];
+//    glGenTextures(2, colorBuffers);
+//    for (unsigned int i = 0; i < 2; i++)
+//    {
+//        glBindTexture(GL_TEXTURE_2D, colorBuffers[i]);
+//        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
+//        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+//        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+//        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);  // we clamp to the edge as the blur filter would otherwise sample repeated texture values!
+//        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+//        // attach texture to framebuffer
+//        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, GL_TEXTURE_2D, colorBuffers[i], 0);
+//    }
+//    // create and attach depth buffer (renderbuffer)
+//    unsigned int rboDepth;
+//    glGenRenderbuffers(1, &rboDepth);
+//    glBindRenderbuffer(GL_RENDERBUFFER, rboDepth);
+//    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, SCR_WIDTH, SCR_HEIGHT);
+//    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rboDepth);
+//    // tell OpenGL which color attachments we'll use (of this framebuffer) for rendering
+//    unsigned int attachments[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
+//    glDrawBuffers(2, attachments);
+//    // finally check if framebuffer is complete
+//    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+//        std::cout << "Framebuffer not complete!" << std::endl;
+//    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+//
+//    // ping-pong-framebuffer for blurring
+//    unsigned int pingpongFBO[2];
+//    unsigned int pingpongColorbuffers[2];
+//    glGenFramebuffers(2, pingpongFBO);
+//    glGenTextures(2, pingpongColorbuffers);
+//    for (unsigned int i = 0; i < 2; i++)
+//    {
+//        glBindFramebuffer(GL_FRAMEBUFFER, pingpongFBO[i]);
+//        glBindTexture(GL_TEXTURE_2D, pingpongColorbuffers[i]);
+//        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
+//        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+//        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+//        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); // we clamp to the edge as the blur filter would otherwise sample repeated texture values!
+//        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+//        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, pingpongColorbuffers[i], 0);
+//        // also check if framebuffers are complete (no need for depth buffer)
+//        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+//            std::cout << "Framebuffer not complete!" << std::endl;
+//    }
+
     // plane VAO
     unsigned int planeVAO, planeVBO;
     glGenVertexArrays(1, &planeVAO);
@@ -411,7 +478,17 @@ int main() {
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 
-
+    // setup plane VAO
+    unsigned int quadVAO, quadVBO;
+    glGenVertexArrays(1, &quadVAO);
+    glGenBuffers(1, &quadVBO);
+    glBindVertexArray(quadVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
 
     // SkyBox VAO
     unsigned int skyboxVAO, skyboxVBO;
@@ -424,10 +501,11 @@ int main() {
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 
 
+
     // loading textures
-    unsigned int flagTexture = loadTexture(FileSystem::getPath("resources/textures/pirateskull.png").c_str());
-    unsigned int waterTexture = loadTexture(FileSystem::getPath("resources/textures/water.jpg").c_str());
-    unsigned int grassTexture = loadTexture(FileSystem::getPath("resources/textures/grass.png").c_str());
+    unsigned int flagTexture = loadTexture(FileSystem::getPath("resources/textures/pirateskull.png").c_str(), true);
+    unsigned int waterTexture = loadTexture(FileSystem::getPath("resources/textures/water.jpg").c_str(), true);
+    unsigned int grassTexture = loadTexture(FileSystem::getPath("resources/textures/grass.png").c_str(), true);
 
     // SkyBox textures and shader configuration
     vector<std::string> day
@@ -459,6 +537,8 @@ int main() {
         glm::vec3(-32.0f, 25.0f, -119.3f),
         glm::vec3(-63.0f, 16.3f, -105.3f)
     };
+
+    // shader configuration
     skyboxShader.use();
     skyboxShader.setInt("skybox", 0);
 
@@ -468,6 +548,12 @@ int main() {
 
     blendingShader.use();
     blendingShader.setInt("texture1", 0);
+
+    blurShader.use();
+    blurShader.setInt("image", 0);
+
+    bloomShader.use();
+    bloomShader.setInt("bloomBlur", 1);
 
     // render loop
     // -----------
@@ -511,6 +597,9 @@ int main() {
 //        lightingShader.setFloat("material.shininess", 32.0f);
 
 
+        // 1. render scene into floating point framebuffer
+//        glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO);
+//        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         lightingShader.use();
         // view/projection transformations
@@ -585,22 +674,40 @@ int main() {
         treasure.Draw(lightingShader);
 
         // render lamp
-        model = glm::mat4(1.0f); //inicijalizacija
-        model = glm:: translate(model, glm::vec3(1.4f, 4.6f, -8.0f));
-        model = glm::scale(model, glm::vec3(0.01f, 0.01f, 0.01f));
-        lightingShader.setMat4("model", model);
-        lamp.Draw(lightingShader);
-        model = glm::mat4(1.0f); //inicijalizacija
-        model = glm:: translate(model, glm::vec3(-1.4f, 4.6f, -8.0f));
-        model = glm::scale(model, glm::vec3(0.01f, 0.01f, 0.01f));
-        lightingShader.setMat4("model", model);
-        lamp.Draw(lightingShader);
-        model = glm::mat4(1.0f); //inicijalizacija
-        model = glm:: translate(model, glm::vec3(-37.5f, 22.65f, -100.0f));
-        model = glm::scale(model, glm::vec3(0.017f, 0.017f, 0.017f));
-        lightingShader.setMat4("model", model);
-        lamp.Draw(lightingShader);
-
+        if(dayNnite) {
+            model = glm::mat4(1.0f); //inicijalizacija
+            model = glm::translate(model, glm::vec3(1.4f, 4.6f, -8.0f));
+            model = glm::scale(model, glm::vec3(0.01f, 0.01f, 0.01f));
+            lightingShader.setMat4("model", model);
+            lamp.Draw(lightingShader);
+            model = glm::mat4(1.0f); //inicijalizacija
+            model = glm::translate(model, glm::vec3(-1.4f, 4.6f, -8.0f));
+            model = glm::scale(model, glm::vec3(0.01f, 0.01f, 0.01f));
+            lightingShader.setMat4("model", model);
+            lamp.Draw(lightingShader);
+            model = glm::mat4(1.0f); //inicijalizacija
+            model = glm::translate(model, glm::vec3(-37.5f, 22.65f, -100.0f));
+            model = glm::scale(model, glm::vec3(0.017f, 0.017f, 0.017f));
+            lightingShader.setMat4("model", model);
+            lamp.Draw(lightingShader);
+        }
+        else {
+            model = glm::mat4(1.0f); //inicijalizacija
+            model = glm::translate(model, glm::vec3(1.4f, 4.6f, -8.0f));
+            model = glm::scale(model, glm::vec3(0.01f, 0.01f, 0.01f));
+            lightingShader.setMat4("model", model);
+            nightlamp.Draw(lightingShader);
+            model = glm::mat4(1.0f); //inicijalizacija
+            model = glm::translate(model, glm::vec3(-1.4f, 4.6f, -8.0f));
+            model = glm::scale(model, glm::vec3(0.01f, 0.01f, 0.01f));
+            lightingShader.setMat4("model", model);
+            nightlamp.Draw(lightingShader);
+            model = glm::mat4(1.0f); //inicijalizacija
+            model = glm::translate(model, glm::vec3(-37.5f, 22.65f, -100.0f));
+            model = glm::scale(model, glm::vec3(0.017f, 0.017f, 0.017f));
+            lightingShader.setMat4("model", model);
+            nightlamp.Draw(lightingShader);
+        }
         // table
         model = glm::mat4(1.0f); //inicijalizacija
 
@@ -616,13 +723,13 @@ int main() {
         model = glm::rotate(model, glm::radians(120.0f), glm::vec3(0.0f, 1.0f, 0.0f));
         model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));
         lightingShader.setMat4("model", model);
-        beer.Draw(lightingShader);
+        zajecarac.Draw(lightingShader);
         model = glm::mat4(1.0f); //inicijalizacija
         model = glm:: translate(model, glm::vec3(-38.5f, 22.6f, -101.1f));
         model = glm::rotate(model, glm::radians(170.0f), glm::vec3(0.0f, 1.0f, 0.0f));
         model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));
         lightingShader.setMat4("model", model);
-        beer.Draw(lightingShader);
+        zajecarac.Draw(lightingShader);
 
         // chair
         model = glm::mat4(1.0f); //inicijalizacija
@@ -717,6 +824,39 @@ int main() {
         glDepthFunc(GL_LESS); // set depth function back to default
         glDepthMask(GL_TRUE);
 
+//        // 2. blur bright fragments with two-pass Gaussian Blur
+//        // --------------------------------------------------
+//        bool horizontal = true, first_iteration = true;
+//        unsigned int amount = 10;
+//        blurShader.use();
+//        for (unsigned int i = 0; i < amount; i++)
+//        {
+//            glBindFramebuffer(GL_FRAMEBUFFER, pingpongFBO[horizontal]);
+//            blurShader.setInt("horizontal", horizontal);
+//            glBindTexture(GL_TEXTURE_2D, first_iteration ? colorBuffers[1] : pingpongColorbuffers[!horizontal]);  // bind texture of other framebuffer (or scene if first iteration)
+//            glBindVertexArray(quadVAO);
+//            glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+//            glBindVertexArray(0);
+//            horizontal = !horizontal;
+//            if (first_iteration)
+//                first_iteration = false;
+//        }
+//        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+//
+//        // 3. now render floating point color buffer to 2D quad and tonemap HDR colors to default framebuffer's (clamped) color range
+//        // --------------------------------------------------------------------------------------------------------------------------
+//        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+//        bloomShader.use();
+//        glActiveTexture(GL_TEXTURE0);
+//        glBindTexture(GL_TEXTURE_2D, colorBuffers[0]);
+//        glActiveTexture(GL_TEXTURE1);
+//        glBindTexture(GL_TEXTURE_2D, pingpongColorbuffers[!horizontal]);
+//        bloomShader.setInt("bloom", true);
+//        bloomShader.setFloat("exposure", 0.1f);
+//        glBindVertexArray(quadVAO);
+//        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+//        glBindVertexArray(0);
+
         if (programState->ImGuiEnabled)
             DrawImGui(programState);
 
@@ -738,9 +878,13 @@ int main() {
     glDeleteVertexArrays(1, &planeVAO);
     glDeleteVertexArrays(1, &skyboxVAO);
     glDeleteVertexArrays(1, &grassVAO);
+    glDeleteVertexArrays(1, &cubeVAO);
+    glDeleteVertexArrays(1, &quadVAO);
     glDeleteBuffers(1, &planeVBO);
     glDeleteBuffers(1, &skyboxVBO);
     glDeleteBuffers(1, &grassVBO);
+    glDeleteBuffers(1, &cubeVBO);
+    glDeleteBuffers(1, &quadVBO);
     glfwTerminate();
     return 0;
 }
@@ -759,6 +903,28 @@ void processInput(GLFWwindow *window) {
         programState->camera.ProcessKeyboard(LEFT, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         programState->camera.ProcessKeyboard(RIGHT, deltaTime);
+
+    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS && !bloomKeyPressed)
+    {
+        bloom = !bloom;
+        bloomKeyPressed = true;
+    }
+    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_RELEASE)
+    {
+        bloomKeyPressed = false;
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
+    {
+        if (exposure > 0.0f)
+            exposure -= 0.001f;
+        else
+            exposure = 0.0f;
+    }
+    else if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+    {
+        exposure += 0.001f;
+    }
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
@@ -880,6 +1046,53 @@ unsigned int loadTexture(char const * path)
 
     return textureID;
 }
+
+unsigned int loadTexture(char const * path, bool gammaCorrection)
+{
+    unsigned int textureID;
+    glGenTextures(1, &textureID);
+
+    int width, height, nrComponents;
+    unsigned char *data = stbi_load(path, &width, &height, &nrComponents, 0);
+    if (data)
+    {
+        GLenum internalFormat;
+        GLenum dataFormat;
+        if (nrComponents == 1)
+        {
+            internalFormat = dataFormat = GL_RED;
+        }
+        else if (nrComponents == 3)
+        {
+            internalFormat = gammaCorrection ? GL_SRGB : GL_RGB;
+            dataFormat = GL_RGB;
+        }
+        else if (nrComponents == 4)
+        {
+            internalFormat = gammaCorrection ? GL_SRGB_ALPHA : GL_RGBA;
+            dataFormat = GL_RGBA;
+        }
+
+        glBindTexture(GL_TEXTURE_2D, textureID);
+        glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, dataFormat, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        stbi_image_free(data);
+    }
+    else
+    {
+        std::cout << "Texture failed to load at path: " << path << std::endl;
+        stbi_image_free(data);
+    }
+
+    return textureID;
+}
+
 unsigned int loadCubemap(vector<std::string> faces)
 {
     unsigned int textureID;
