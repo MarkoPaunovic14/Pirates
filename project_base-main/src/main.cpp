@@ -108,6 +108,8 @@ void ProgramState::LoadFromFile(std::string filename) {
 ProgramState *programState;
 void DrawImGui(ProgramState *programState);
 
+void lightIt(Shader shader);
+
 int main() {
     // glfw: initialize and configure
     // ------------------------------
@@ -177,6 +179,7 @@ int main() {
     Shader lightingShader("resources/shaders/2.model_lighting.vs", "resources/shaders/2.model_lighting.fs");
     Shader skyboxShader("resources/shaders/skybox.vs", "resources/shaders/skybox.fs");
     Shader blendingShader("resources/shaders/blending.vs", "resources/shaders/blending.fs");
+    Shader lightCubeShader("resources/shaders/lightCube.vs", "resources/shaders/lightCube.fs");
 
     // load models
     // -----------
@@ -214,6 +217,9 @@ int main() {
     Model chair("resources/objects/chair/Simple_Wooden_Chair.obj");
     chair.SetShaderTextureNamePrefix("material.");
 
+    Model campfire("resources/objects/campfire/Campfire.obj");
+    campfire.SetShaderTextureNamePrefix("material.");
+
 
 //    PointLight& pointLight = programState->pointLight;
 //    pointLight.position = glm::vec3(1.4f, 4.8f, -8.0f);
@@ -234,7 +240,6 @@ int main() {
 //    pointLight2.constant = 1.0f;
 //    pointLight2.linear = 0.09f;
 //    pointLight2.quadratic = 0.1f;
-
 
 
 
@@ -269,6 +274,51 @@ int main() {
             1.0f, -0.5f,  0.0f,  1.0f,  1.0f,
             1.0f,  0.5f,  0.0f,  1.0f,  0.0f
     };
+
+    float cube[] = {
+            -0.5f, -0.5f, -0.5f,
+            0.5f, -0.5f, -0.5f,
+            0.5f,  0.5f, -0.5f,
+            0.5f,  0.5f, -0.5f,
+            -0.5f,  0.5f, -0.5f,
+            -0.5f, -0.5f, -0.5f,
+
+            -0.5f, -0.5f,  0.5f,
+            0.5f, -0.5f,  0.5f,
+            0.5f,  0.5f,  0.5f,
+            0.5f,  0.5f,  0.5f,
+            -0.5f,  0.5f,  0.5f,
+            -0.5f, -0.5f,  0.5f,
+
+            -0.5f,  0.5f,  0.5f,
+            -0.5f,  0.5f, -0.5f,
+            -0.5f, -0.5f, -0.5f,
+            -0.5f, -0.5f, -0.5f,
+            -0.5f, -0.5f,  0.5f,
+            -0.5f,  0.5f,  0.5f,
+
+            0.5f,  0.5f,  0.5f,
+            0.5f,  0.5f, -0.5f,
+            0.5f, -0.5f, -0.5f,
+            0.5f, -0.5f, -0.5f,
+            0.5f, -0.5f,  0.5f,
+            0.5f,  0.5f,  0.5f,
+
+            -0.5f, -0.5f, -0.5f,
+            0.5f, -0.5f, -0.5f,
+            0.5f, -0.5f,  0.5f,
+            0.5f, -0.5f,  0.5f,
+            -0.5f, -0.5f,  0.5f,
+            -0.5f, -0.5f, -0.5f,
+
+            -0.5f,  0.5f, -0.5f,
+            0.5f,  0.5f, -0.5f,
+            0.5f,  0.5f,  0.5f,
+            0.5f,  0.5f,  0.5f,
+            -0.5f,  0.5f,  0.5f,
+            -0.5f,  0.5f, -0.5f
+    };
+
 
     // SkyBox
     float skyboxVertices[] = {
@@ -351,6 +401,17 @@ int main() {
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
 
+    // cube VAO
+    unsigned int cubeVAO, cubeVBO;
+    glGenVertexArrays(1, &cubeVAO);
+    glGenBuffers(1, &cubeVBO);
+    glBindVertexArray(cubeVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(cube), &cube, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+
+
 
     // SkyBox VAO
     unsigned int skyboxVAO, skyboxVBO;
@@ -390,6 +451,14 @@ int main() {
                     FileSystem::getPath("resources/textures/skybox/skyboxnight/back.jpg")
             };
     unsigned int cubemapTextureNight = loadCubemap(night);
+
+    vector<glm::vec3> vegetation {
+        glm::vec3(34.0f, 9.0f, -58.5f),
+        glm::vec3(-23.5f, 3.8f, -57.8f),
+        glm::vec3(-3.8f, 12.2f, -83.3f),
+        glm::vec3(-32.0f, 25.0f, -119.3f),
+        glm::vec3(-63.0f, 16.3f, -105.3f)
+    };
     skyboxShader.use();
     skyboxShader.setInt("skybox", 0);
 
@@ -420,7 +489,6 @@ int main() {
 
 
         // don't forget to enable shader before setting uniforms
-        lightingShader.use();
         //pointLight.position = glm::vec3(4.0 * cos(currentFrame), 4.0f, 4.0 * sin(currentFrame));
 //        lightingShader.setVec3("pointLight.position", pointLight.position);
 //        lightingShader.setVec3("pointLight.ambient", pointLight.ambient);
@@ -443,117 +511,6 @@ int main() {
 //        lightingShader.setFloat("material.shininess", 32.0f);
 
 
-        //treasure lighting
-        lightingShader.setVec3("pointLight3.position", -3.22f, 6.6f, -12.9f);
-        lightingShader.setVec3("pointLight3.ambient", 0.3, 0.06, 0.0);
-        lightingShader.setVec3("pointLight3.diffuse", 1.0, 0.72, 0.11);
-        lightingShader.setVec3("pointLight3.specular", 1.0, 0.72, 0.11);
-        lightingShader.setFloat("pointLight3.constant", 1);
-        lightingShader.setFloat("pointLight3.linear", 0.09f);
-        lightingShader.setFloat("pointLight3.quadratic", 0.5f);
-        lightingShader.setVec3("viewPosition", programState->camera.Position);
-        lightingShader.setFloat("material.shininess", 32.0f);
-
-        lightingShader.setVec3("pointLight4.position", 3.22f, 6.6f, -12.9f);
-        lightingShader.setVec3("pointLight4.ambient", 0.3, 0.06, 0.0);
-        lightingShader.setVec3("pointLight4.diffuse", 1.0, 0.72, 0.11);
-        lightingShader.setVec3("pointLight4.specular", 1.0, 0.72, 0.11);
-        lightingShader.setFloat("pointLight4.constant", 1);
-        lightingShader.setFloat("pointLight4.linear", 0.09f);
-        lightingShader.setFloat("pointLight4.quadratic", 0.5f);
-        lightingShader.setVec3("viewPosition", programState->camera.Position);
-        lightingShader.setFloat("material.shininess", 32.0f);
-
-
-        if(dayNnite) {
-            // Point light
-
-            lightingShader.setVec3("pointLight1.position", 1.4f, 4.8f, -8.0f);
-            lightingShader.setVec3("pointLight1.ambient", 0, 0, 0);
-            lightingShader.setVec3("pointLight1.diffuse", 0, 0, 0);
-            lightingShader.setVec3("pointLight1.specular", 0, 0, 0);
-            lightingShader.setFloat("pointLight1.constant", 1);
-            lightingShader.setFloat("pointLight1.linear", 0.09f);
-            lightingShader.setFloat("pointLight1.quadratic", 0.1f);
-            lightingShader.setVec3("viewPosition", programState->camera.Position);
-            lightingShader.setFloat("material.shininess", 32.0f);
-
-            lightingShader.setVec3("pointLight2.position", -1.4f, 4.8f, -8.0f);
-            lightingShader.setVec3("pointLight2.ambient", 0, 0, 0);
-            lightingShader.setVec3("pointLight2.diffuse", 0, 0, 0);
-            lightingShader.setVec3("pointLight2.specular", 0, 0, 0);
-            lightingShader.setFloat("pointLight2.constant", 1);
-            lightingShader.setFloat("pointLight2.linear", 0.09f);
-            lightingShader.setFloat("pointLight2.quadratic", 0.1f);
-            lightingShader.setVec3("viewPosition", programState->camera.Position);
-            lightingShader.setFloat("material.shininess", 32.0f);
-
-            lightingShader.setVec3("pointLight5.position", -37.5f, 23.0f, -100.0f);
-            lightingShader.setVec3("pointLight5.ambient", 0, 0, 0);
-            lightingShader.setVec3("pointLight5.diffuse", 0, 0, 0);
-            lightingShader.setVec3("pointLight5.specular", 0, 0, 0);
-            lightingShader.setFloat("pointLight5.constant", 1);
-            lightingShader.setFloat("pointLight5.linear", 0.0f);
-            lightingShader.setFloat("pointLight5.quadratic", 0.1f);
-            lightingShader.setVec3("viewPosition", programState->camera.Position);
-            lightingShader.setFloat("material.shininess", 32.0f);
-
-            // Dir Light
-            lightingShader.setVec3("dirLight.direction", 0.7f, -0.5f, -0.5f);
-            lightingShader.setVec3("dirLight.ambient", 0.4f, 0.4f, 0.4f);
-            lightingShader.setVec3("dirLight.diffuse", 0.7f, 0.7f, 0.7f);
-            lightingShader.setVec3("dirLight.specular", 0.8f, 0.8f, 0.8f);
-
-            blendingShader.use();
-            blendingShader.setVec3("dirLight.direction", 0.7f, -0.5f, -0.5f);
-            blendingShader.setVec3("dirLight.ambient", 0.4f, 0.4f, 0.4f);
-            blendingShader.setVec3("dirLight.diffuse", 0.7f, 0.7f, 0.7f);
-            blendingShader.setVec3("dirLight.specular", 0.8f, 0.8f, 0.8f);
-        }
-        else {
-            // Point light 255,184,28
-            lightingShader.setVec3("pointLight1.position", 1.4f, 4.8f, -8.0f);
-            lightingShader.setVec3("pointLight1.ambient", 0.3, 0.06, 0.0);
-            lightingShader.setVec3("pointLight1.diffuse", 1.0, 0.72, 0.11);
-            lightingShader.setVec3("pointLight1.specular", 1.0, 0.72, 0.11);
-            lightingShader.setFloat("pointLight1.constant", 1);
-            lightingShader.setFloat("pointLight1.linear", 0.09f);
-            lightingShader.setFloat("pointLight1.quadratic", 0.1f);
-            lightingShader.setVec3("viewPosition", programState->camera.Position);
-            lightingShader.setFloat("material.shininess", 32.0f);
-
-            lightingShader.setVec3("pointLight2.position", -1.4f, 4.8f, -8.0f);
-            lightingShader.setVec3("pointLight2.ambient", 0.3, 0.06, 0.0);
-            lightingShader.setVec3("pointLight2.diffuse", 1.0, 0.72, 0.11);
-            lightingShader.setVec3("pointLight2.specular", 1.0, 0.72, 0.11);
-            lightingShader.setFloat("pointLight2.constant", 1);
-            lightingShader.setFloat("pointLight2.linear", 0.09f);
-            lightingShader.setFloat("pointLight2.quadratic", 0.1f);
-            lightingShader.setVec3("viewPosition", programState->camera.Position);
-            lightingShader.setFloat("material.shininess", 32.0f);
-
-            lightingShader.setVec3("pointLight5.position", -37.5f, 23.0f, -100.0f);
-            lightingShader.setVec3("pointLight5.ambient", 0.3, 0.06, 0.0);
-            lightingShader.setVec3("pointLight5.diffuse", 1.0, 0.72, 0.11);
-            lightingShader.setVec3("pointLight5.specular", 1.0, 0.72, 0.11);
-            lightingShader.setFloat("pointLight5.constant", 1);
-            lightingShader.setFloat("pointLight5.linear", 0.0f);
-            lightingShader.setFloat("pointLight5.quadratic", 0.1f);
-            lightingShader.setVec3("viewPosition", programState->camera.Position);
-            lightingShader.setFloat("material.shininess", 32.0f);
-
-            // Dir Light
-            lightingShader.setVec3("dirLight.direction", -0.3f, -0.9f, -0.25f);
-            lightingShader.setVec3("dirLight.ambient", 0.05f, 0.05f, 0.05f);
-            lightingShader.setVec3("dirLight.diffuse", 0.1f, 0.1f, 0.1f);
-            lightingShader.setVec3("dirLight.specular", 0.3f, 0.3f, 0.3f);
-
-            blendingShader.use();
-            blendingShader.setVec3("dirLight.direction", -0.3f, -0.9f, -0.25f);
-            blendingShader.setVec3("dirLight.ambient", 0.05f, 0.05f, 0.05f);
-            blendingShader.setVec3("dirLight.diffuse", 0.1f, 0.1f, 0.1f);
-            blendingShader.setVec3("dirLight.specular", 0.3f, 0.3f, 0.3f);
-        }
 
         lightingShader.use();
         // view/projection transformations
@@ -681,6 +638,14 @@ int main() {
         lightingShader.setMat4("model", model);
         chair.Draw(lightingShader);
 
+        // campfire
+        model = glm::mat4(1.0f); //inicijalizacija
+        model = glm:: translate(model, glm::vec3(-14.6f, 1.8f, -53.5f));
+        //model = glm::rotate(model, glm::radians(165.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.05f, 0.05f, 0.05f));
+        lightingShader.setMat4("model", model);
+        campfire.Draw(lightingShader);
+
         // flag
         model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(0.0f, 4.2f, -15.2f));
@@ -702,22 +667,36 @@ int main() {
         glDrawArrays(GL_TRIANGLES, 0, 6);
         glDisable(GL_CULL_FACE);
 
-        // gras
+        // grass
         blendingShader.use();
         blendingShader.setMat4("view", view);
         blendingShader.setMat4("projection", projection);
-        model = glm::mat4(1.0f);
+        for(int i = 0; i < vegetation.size(); i++){
+            model = glm::mat4(1.0f);
+            model = glm::translate(model, vegetation[i]);
+            model = glm::scale(model, glm::vec3(3.0f, 3.0f, 3.0f));
+            glBindVertexArray(grassVAO);
+            glBindTexture(GL_TEXTURE_2D, grassTexture);
+            blendingShader.setMat4("model", model);
+            glDrawArrays(GL_TRIANGLES, 0, 6);
+        }
+
+        // firecube
+        lightCubeShader.use();
+        lightCubeShader.setMat4("projection", projection);
+        lightCubeShader.setMat4("view", view);
+        glBindVertexArray(cubeVAO);
+        model = glm::mat4(1.0);
         model = glm::translate(model, programState->shipPosition);
-        model = glm::translate(model, glm::vec3(34.4f, 9.0f, -58.5f));
-        model = glm::scale(model, glm::vec3(3.0f, 3.0f, 3.0f));
-        model = glm::scale(model, glm::vec3(programState->shipScale));
+        model = glm::translate(model, glm::vec3(-14.6f, 2.5f, -53.5f));
+        model = glm::scale(model,glm::vec3(programState->shipScale));
+        lightCubeShader.setMat4("model", model);
+        lightCubeShader.setVec3("lightColor", glm::vec3(0.99f, 0.31f, 0.0f)); //254,80,0
+        glDrawArrays(GL_TRIANGLES, 0, 36);
 
-        glBindVertexArray(grassVAO);
-        glBindTexture(GL_TEXTURE_2D, grassTexture);
-        blendingShader.setMat4("model", model);
-        glDrawArrays(GL_TRIANGLES, 0, 6);
-
-
+        // lighting
+        lightIt(lightingShader);
+        lightIt(blendingShader);
 
         // draw skybox as last
         glDepthMask(GL_FALSE);
@@ -929,4 +908,127 @@ unsigned int loadCubemap(vector<std::string> faces)
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
     return textureID;
+}
+
+void lightIt(Shader shader) {
+    //treasure lighting
+    shader.use();
+    shader.setVec3("pointLight3.position", -3.22f, 6.6f, -12.9f);
+    shader.setVec3("pointLight3.ambient", 0.3, 0.06, 0.0);
+    shader.setVec3("pointLight3.diffuse", 1.0, 0.72, 0.11);
+    shader.setVec3("pointLight3.specular", 1.0, 0.72, 0.11);
+    shader.setFloat("pointLight3.constant", 1);
+    shader.setFloat("pointLight3.linear", 0.09f);
+    shader.setFloat("pointLight3.quadratic", 0.5f);
+    shader.setVec3("viewPosition", programState->camera.Position);
+    shader.setFloat("material.shininess", 32.0f);
+
+    shader.setVec3("pointLight4.position", 3.22f, 6.6f, -12.9f);
+    shader.setVec3("pointLight4.ambient", 0.3, 0.06, 0.0);
+    shader.setVec3("pointLight4.diffuse", 1.0, 0.72, 0.11);
+    shader.setVec3("pointLight4.specular", 1.0, 0.72, 0.11);
+    shader.setFloat("pointLight4.constant", 1);
+    shader.setFloat("pointLight4.linear", 0.09f);
+    shader.setFloat("pointLight4.quadratic", 0.5f);
+    shader.setVec3("viewPosition", programState->camera.Position);
+    shader.setFloat("material.shininess", 32.0f);
+
+
+    if(dayNnite) {
+        // Point light
+
+        shader.setVec3("pointLight1.position", 1.4f, 4.8f, -8.0f);
+        shader.setVec3("pointLight1.ambient", 0, 0, 0);
+        shader.setVec3("pointLight1.diffuse", 0, 0, 0);
+        shader.setVec3("pointLight1.specular", 0, 0, 0);
+        shader.setFloat("pointLight1.constant", 1);
+        shader.setFloat("pointLight1.linear", 0.09f);
+        shader.setFloat("pointLight1.quadratic", 0.1f);
+        shader.setVec3("viewPosition", programState->camera.Position);
+        shader.setFloat("material.shininess", 32.0f);
+
+        shader.setVec3("pointLight2.position", -1.4f, 4.8f, -8.0f);
+        shader.setVec3("pointLight2.ambient", 0, 0, 0);
+        shader.setVec3("pointLight2.diffuse", 0, 0, 0);
+        shader.setVec3("pointLight2.specular", 0, 0, 0);
+        shader.setFloat("pointLight2.constant", 1);
+        shader.setFloat("pointLight2.linear", 0.09f);
+        shader.setFloat("pointLight2.quadratic", 0.1f);
+        shader.setVec3("viewPosition", programState->camera.Position);
+        shader.setFloat("material.shininess", 32.0f);
+
+        shader.setVec3("pointLight5.position", -37.5f, 23.0f, -100.0f);
+        shader.setVec3("pointLight5.ambient", 0, 0, 0);
+        shader.setVec3("pointLight5.diffuse", 0, 0, 0);
+        shader.setVec3("pointLight5.specular", 0, 0, 0);
+        shader.setFloat("pointLight5.constant", 1);
+        shader.setFloat("pointLight5.linear", 0.0f);
+        shader.setFloat("pointLight5.quadratic", 0.1f);
+        shader.setVec3("viewPosition", programState->camera.Position);
+        shader.setFloat("material.shininess", 32.0f);
+
+        shader.setVec3("pointLight6.position", -14.6f, 2.5f, -53.5f);
+        shader.setVec3("pointLight6.ambient", 0.3, 0.06, 0.0);
+        shader.setVec3("pointLight6.diffuse", 0.99f, 0.31f, 0.0f);
+        shader.setVec3("pointLight6.specular", 0.99f, 0.31f, 0.0f);
+        shader.setFloat("pointLight6.constant", 1);
+        shader.setFloat("pointLight6.linear", 0.0f);
+        shader.setFloat("pointLight6.quadratic", 0.01f);
+        shader.setVec3("viewPosition", programState->camera.Position);
+        shader.setFloat("material.shininess", 32.0f);
+
+        // Dir Light
+        shader.setVec3("dirLight.direction", 0.7f, -0.5f, -0.5f);
+        shader.setVec3("dirLight.ambient", 0.4f, 0.4f, 0.4f);
+        shader.setVec3("dirLight.diffuse", 0.7f, 0.7f, 0.7f);
+        shader.setVec3("dirLight.specular", 0.8f, 0.8f, 0.8f);
+    }
+    else {
+        // Point light 255,184,28
+        shader.setVec3("pointLight1.position", 1.4f, 4.8f, -8.0f);
+        shader.setVec3("pointLight1.ambient", 0.3, 0.06, 0.0);
+        shader.setVec3("pointLight1.diffuse", 1.0, 0.72, 0.11);
+        shader.setVec3("pointLight1.specular", 1.0, 0.72, 0.11);
+        shader.setFloat("pointLight1.constant", 1);
+        shader.setFloat("pointLight1.linear", 0.09f);
+        shader.setFloat("pointLight1.quadratic", 0.1f);
+        shader.setVec3("viewPosition", programState->camera.Position);
+        shader.setFloat("material.shininess", 32.0f);
+
+        shader.setVec3("pointLight2.position", -1.4f, 4.8f, -8.0f);
+        shader.setVec3("pointLight2.ambient", 0.3, 0.06, 0.0);
+        shader.setVec3("pointLight2.diffuse", 1.0, 0.72, 0.11);
+        shader.setVec3("pointLight2.specular", 1.0, 0.72, 0.11);
+        shader.setFloat("pointLight2.constant", 1);
+        shader.setFloat("pointLight2.linear", 0.09f);
+        shader.setFloat("pointLight2.quadratic", 0.1f);
+        shader.setVec3("viewPosition", programState->camera.Position);
+        shader.setFloat("material.shininess", 32.0f);
+
+        shader.setVec3("pointLight5.position", -37.5f, 23.0f, -100.0f);
+        shader.setVec3("pointLight5.ambient", 0.3, 0.06, 0.0);
+        shader.setVec3("pointLight5.diffuse", 1.0, 0.72, 0.11);
+        shader.setVec3("pointLight5.specular", 1.0, 0.72, 0.11);
+        shader.setFloat("pointLight5.constant", 1);
+        shader.setFloat("pointLight5.linear", 0.0f);
+        shader.setFloat("pointLight5.quadratic", 0.1f);
+        shader.setVec3("viewPosition", programState->camera.Position);
+        shader.setFloat("material.shininess", 32.0f);
+
+        shader.setVec3("pointLight6.position", -14.6f, 2.5f, -53.5f);
+        shader.setVec3("pointLight6.ambient", 0.3, 0.06, 0.0);
+        shader.setVec3("pointLight6.diffuse", 0.99f, 0.31f, 0.0f);
+        shader.setVec3("pointLight6.specular", 0.99f, 0.31f, 0.0f);
+        shader.setFloat("pointLight6.constant", 1);
+        shader.setFloat("pointLight6.linear", 0.0f);
+        shader.setFloat("pointLight6.quadratic", 0.01f);
+        shader.setVec3("viewPosition", programState->camera.Position);
+        shader.setFloat("material.shininess", 32.0f);
+
+        // Dir Light
+        shader.setVec3("dirLight.direction", -0.3f, -0.9f, -0.25f);
+        shader.setVec3("dirLight.ambient", 0.05f, 0.05f, 0.05f);
+        shader.setVec3("dirLight.diffuse", 0.1f, 0.1f, 0.1f);
+        shader.setVec3("dirLight.specular", 0.3f, 0.3f, 0.3f);
+    }
 }
