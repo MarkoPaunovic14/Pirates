@@ -22,7 +22,6 @@ void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
 void processInput(GLFWwindow *window);
 void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods);
 unsigned int loadTexture(char const * path);
-unsigned int loadTexture(char const * path, bool gammaCorrection);
 unsigned int loadCubemap(vector<std::string> faces);
 void renderQuad();
 
@@ -474,11 +473,11 @@ int main() {
 
 
     // loading textures
-    unsigned int flagTexture = loadTexture(FileSystem::getPath("resources/textures/pirateskull.png").c_str(), true);
-    unsigned int waterTexture = loadTexture(FileSystem::getPath("resources/textures/water.jpg").c_str(), true);
-    unsigned int grassTexture = loadTexture(FileSystem::getPath("resources/textures/grass.png").c_str(), true);
-    unsigned int woodDiffTexture = loadTexture(FileSystem::getPath("resources/textures/wood2/diff.jpg").c_str(), true);
-    unsigned int woodNormTexture = loadTexture(FileSystem::getPath("resources/textures/wood2/normal.jpg").c_str(), true);
+    unsigned int flagTexture = loadTexture(FileSystem::getPath("resources/textures/pirateskull.png").c_str());
+    unsigned int waterTexture = loadTexture(FileSystem::getPath("resources/textures/water.jpg").c_str());
+    unsigned int grassTexture = loadTexture(FileSystem::getPath("resources/textures/grass.png").c_str());
+    unsigned int woodDiffTexture = loadTexture(FileSystem::getPath("resources/textures/wood2/diff.jpg").c_str());
+    unsigned int woodNormTexture = loadTexture(FileSystem::getPath("resources/textures/wood2/normal.jpg").c_str());
 
     // SkyBox textures and shader configuration
     vector<std::string> day
@@ -582,13 +581,13 @@ int main() {
         lightingShader.setMat4("projection", projection);
         lightingShader.setMat4("view", view);
 
-//        normalMappingShader.use();
-//        // view/projection transformations
-//        projection = glm::perspective(glm::radians(programState->camera.Zoom),
-//                                                (float) SCR_WIDTH / (float) SCR_HEIGHT, 0.1f, 3000.0f);
-//        view = programState->camera.GetViewMatrix();
-//        normalMappingShader.setMat4("projection", projection);
-//        normalMappingShader.setMat4("view", view);
+        normalMappingShader.use();
+        // view/projection transformations
+        projection = glm::perspective(glm::radians(programState->camera.Zoom),
+                                                (float) SCR_WIDTH / (float) SCR_HEIGHT, 0.1f, 3000.0f);
+        view = programState->camera.GetViewMatrix();
+        normalMappingShader.setMat4("projection", projection);
+        normalMappingShader.setMat4("view", view);
 
         normalMappingShader.use();
         // render normal-mapped quad
@@ -599,10 +598,12 @@ int main() {
         model = glm::scale(model, glm::vec3(0.8f, 1.2f, 1.2f));
         normalMappingShader.setMat4("model", model);
         normalMappingShader.setVec3("viewPos", programState->camera.Position);
-        normalMappingShader.setVec3("lightPos", pointLight1.position);
+        normalMappingShader.setVec3("lightPos1", pointLight1.position);
+        normalMappingShader.setVec3("lightPos2", pointLight2.position);
 
         lightPointNormal(normalMappingShader, pointLight1, pointLight2);
         lightDirLight(normalMappingShader, dirLightDay, dirLightNight);
+
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, woodDiffTexture);
@@ -985,52 +986,6 @@ unsigned int loadTexture(char const * path)
 //        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, format == GL_RGBA ? GL_CLAMP_TO_EDGE : GL_REPEAT);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-        stbi_image_free(data);
-    }
-    else
-    {
-        std::cout << "Texture failed to load at path: " << path << std::endl;
-        stbi_image_free(data);
-    }
-
-    return textureID;
-}
-
-unsigned int loadTexture(char const * path, bool gammaCorrection)
-{
-    unsigned int textureID;
-    glGenTextures(1, &textureID);
-
-    int width, height, nrComponents;
-    unsigned char *data = stbi_load(path, &width, &height, &nrComponents, 0);
-    if (data)
-    {
-        GLenum internalFormat;
-        GLenum dataFormat;
-        if (nrComponents == 1)
-        {
-            internalFormat = dataFormat = GL_RED;
-        }
-        else if (nrComponents == 3)
-        {
-            internalFormat = gammaCorrection ? GL_SRGB : GL_RGB;
-            dataFormat = GL_RGB;
-        }
-        else if (nrComponents == 4)
-        {
-            internalFormat = gammaCorrection ? GL_SRGB_ALPHA : GL_RGBA;
-            dataFormat = GL_RGBA;
-        }
-
-        glBindTexture(GL_TEXTURE_2D, textureID);
-        glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, dataFormat, GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
