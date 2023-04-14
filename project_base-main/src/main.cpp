@@ -40,6 +40,7 @@ float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
 bool dayNnite = true; // day is true
+float heightScale = 0.0;
 
 struct PointLight {
     glm::vec3 position;
@@ -478,6 +479,7 @@ int main() {
     unsigned int grassTexture = loadTexture(FileSystem::getPath("resources/textures/grass.png").c_str());
     unsigned int woodDiffTexture = loadTexture(FileSystem::getPath("resources/textures/wood2/diff.jpg").c_str());
     unsigned int woodNormTexture = loadTexture(FileSystem::getPath("resources/textures/wood2/normal.jpg").c_str());
+    unsigned int woodDispTexture = loadTexture(FileSystem::getPath("resources/textures/wood2/disp.jpg").c_str());
 
     // SkyBox textures and shader configuration
     vector<std::string> day
@@ -600,6 +602,7 @@ int main() {
         normalMappingShader.setVec3("viewPos", programState->camera.Position);
         normalMappingShader.setVec3("lightPos1", pointLight1.position);
         normalMappingShader.setVec3("lightPos2", pointLight2.position);
+        normalMappingShader.setFloat("heightScale", heightScale);
 
         lightPointNormal(normalMappingShader, pointLight1, pointLight2);
         lightDirLight(normalMappingShader, dirLightDay, dirLightNight);
@@ -609,6 +612,8 @@ int main() {
         glBindTexture(GL_TEXTURE_2D, woodDiffTexture);
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, woodNormTexture);
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, woodDispTexture);
         renderQuad();
 
 
