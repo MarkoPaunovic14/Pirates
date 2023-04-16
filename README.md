@@ -6,7 +6,7 @@ Scene with a pirate ship and an island with a small cabin where pirates spend th
 It is made in C++ using OpenGL.
 
 
-## Controlls
+## Controls
 
 <kbd>W</kbd> - move forward
 
@@ -17,6 +17,8 @@ It is made in C++ using OpenGL.
 <kbd>D</kbd> - move right
 
 <kbd>MOUSE</kbd> - look around
+
+<kbd>SCROLL</kbd> - zoom
 
 <kbd>L</kbd> - change between day and night
 
