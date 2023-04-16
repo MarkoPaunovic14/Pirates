@@ -10,11 +10,11 @@ It is made in C++ using OpenGL.
 
 <kbd>W</kbd> - move forward
 
-S - move backwards
-A - move left
-D - move right
-MOUSE - look around
-L - change between day and night
-Q - increase height scale for parallax mapping
-E - decrease height scale for parallax mapping
-F1 - toggle ImGui
+<kbd>S</kbd> - move backwards
+<kbd>A</kbd> - move left
+<kbd>D</kbd> - move right
+<kbd>MOUSE</kbd> - look around
+<kbd>L</kbd> - change between day and night
+<kbd>Q</kbd> - increase height scale for parallax mapping
+<kbd>E</kbd> - decrease height scale for parallax mapping
+<kbd>F1</kbd> - toggle ImGui
