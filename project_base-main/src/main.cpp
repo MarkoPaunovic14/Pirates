@@ -274,7 +274,7 @@ int main() {
     pointLight4.quadratic = 0.5f;
 
     PointLight pointLight5;
-    pointLight5.position = glm::vec3(-37.5f, 23.0f, -100.0f);
+    pointLight5.position = glm::vec3(-35.2f, 23.0f, -105.8f);
     pointLight5.ambient = glm::vec3(0.3, 0.06, 0.0);
     pointLight5.diffuse = glm::vec3(1.0, 0.72, 0.11);
     pointLight5.specular = glm::vec3(1.0, 0.72, 0.11);
@@ -474,7 +474,8 @@ int main() {
 
     // loading textures
     unsigned int flagTexture = loadTexture(FileSystem::getPath("resources/textures/pirateskull.png").c_str());
-    unsigned int waterTexture = loadTexture(FileSystem::getPath("resources/textures/water.jpg").c_str());
+    unsigned int waterTexDiff = loadTexture(FileSystem::getPath("resources/textures/water.jpg").c_str());
+    unsigned int waterTexSpec = loadTexture(FileSystem::getPath("resources/textures/water_spec.jpg").c_str());
     unsigned int grassTexture = loadTexture(FileSystem::getPath("resources/textures/grass.png").c_str());
     unsigned int woodDiffTexture = loadTexture(FileSystem::getPath("resources/textures/wood2/diff.jpg").c_str());
     unsigned int woodNormTexture = loadTexture(FileSystem::getPath("resources/textures/wood2/normal.jpg").c_str());
@@ -672,7 +673,7 @@ int main() {
             lightingShader.setMat4("model", model);
             lamp.Draw(lightingShader);
             model = glm::mat4(1.0f); // initialization
-            model = glm::translate(model, glm::vec3(-37.5f, 22.65f, -100.0f));
+            model = glm::translate(model, glm::vec3(-35.2f, 22.65f, -106.0f));
             model = glm::scale(model, glm::vec3(0.017f, 0.017f, 0.017f));
             lightingShader.setMat4("model", model);
             lamp.Draw(lightingShader);
@@ -689,29 +690,29 @@ int main() {
             lightingShader.setMat4("model", model);
             nightlamp.Draw(lightingShader);
             model = glm::mat4(1.0f); // initialization
-            model = glm::translate(model, glm::vec3(-37.5f, 22.65f, -100.0f));
+            model = glm::translate(model, glm::vec3(-35.2f, 22.65f, -106.0f));
             model = glm::scale(model, glm::vec3(0.017f, 0.017f, 0.017f));
             lightingShader.setMat4("model", model);
             nightlamp.Draw(lightingShader);
         }
         // table
         model = glm::mat4(1.0f); // initialization
-
-        model = glm:: translate(model, glm::vec3(-37.0f, 20.0f, -100.0f));
+        model = glm:: translate(model, glm::vec3(-35.5f, 20.0f, -105.3f));
         model = glm::rotate(model, glm::radians(-15.0f), glm::vec3(0.0f, 1.0f, 0.0f));
         model = glm::scale(model, glm::vec3(0.5f, 0.3f, 0.4f));
         lightingShader.setMat4("model", model);
         table.Draw(lightingShader);
 
+        // +1.5 0 -5.3
         // zajecarac
         model = glm::mat4(1.0f); // initialization
-        model = glm:: translate(model, glm::vec3(-35.0f, 22.6f, -99.5f));
+        model = glm:: translate(model, glm::vec3(-33.5f, 22.6f, -104.7f));
         //model = glm::rotate(model, glm::radians(120.0f), glm::vec3(0.0f, 1.0f, 0.0f));
         model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));
         lightingShader.setMat4("model", model);
         zajecarac.Draw(lightingShader);
         model = glm::mat4(1.0f); // initialization
-        model = glm:: translate(model, glm::vec3(-38.5f, 22.6f, -101.1f));
+        model = glm:: translate(model, glm::vec3(-37.0f, 22.6f, -105.1f));
         //model = glm::rotate(model, glm::radians(170.0f), glm::vec3(0.0f, 1.0f, 0.0f));
         model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));
         lightingShader.setMat4("model", model);
@@ -719,14 +720,14 @@ int main() {
 
         // chair
         model = glm::mat4(1.0f); // initialization
-        model = glm:: translate(model, glm::vec3(-38.0f, 20.0f, -104.0f));
-        model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        model = glm:: translate(model, glm::vec3(-38.3f, 20.0f, -103.0f));
+        model = glm::rotate(model, glm::radians(70.0f), glm::vec3(0.0f, 1.0f, 0.0f));
         model = glm::scale(model, glm::vec3(4.0f, 4.0f, 4.0f));
         lightingShader.setMat4("model", model);
         chair.Draw(lightingShader);
         model = glm::mat4(1.0f); // initialization
-        model = glm:: translate(model, glm::vec3(-33.5f, 20.0f, -98.0f));
-        model = glm::rotate(model, glm::radians(165.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        model = glm:: translate(model, glm::vec3(-31.2f, 20.0f, -104.7f));
+        //model = glm::rotate(model, glm::radians(165.0f), glm::vec3(0.0f, 1.0f, 0.0f));
         model = glm::scale(model, glm::vec3(4.0f, 4.0f, 4.0f));
         lightingShader.setMat4("model", model);
         chair.Draw(lightingShader);
@@ -749,34 +750,40 @@ int main() {
         lightingShader.setMat4("model", model);
         glDrawArrays(GL_TRIANGLES, 0, 6);
 
+        // Blending: grass
+        blendingShader.use();
+        blendingShader.setMat4("view", view);
+        blendingShader.setMat4("projection", projection);
+        for(int i = 0; i < vegetation.size(); i++){
+            glBindVertexArray(grassVAO);
+            glBindTexture(GL_TEXTURE_2D, grassTexture);
+            model = glm::mat4(1.0f);
+            model = glm::translate(model, vegetation[i]);
+            model = glm::scale(model, glm::vec3(3.0f, 3.0f, 3.0f));
+            blendingShader.setMat4("model", model);
+            glDrawArrays(GL_TRIANGLES, 0, 6);
+        }
+
+
+
+        lightingShader.use();
         // enable face culling
         glEnable(GL_CULL_FACE);
         // water
         model = glm::mat4(1.0f);
         model = glm::scale(model, glm::vec3(20000.0f, 0.0f, 20000.0f));
         glBindVertexArray(planeVAO);
-        glBindTexture(GL_TEXTURE_2D, waterTexture);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, waterTexDiff);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, waterTexSpec);
         lightingShader.setMat4("model", model);
         glDrawArrays(GL_TRIANGLES, 0, 6);
         // disable face culling
         glDisable(GL_CULL_FACE);
 
-        // Blending: grass
-        blendingShader.use();
-        blendingShader.setMat4("view", view);
-        blendingShader.setMat4("projection", projection);
-        for(int i = 0; i < vegetation.size(); i++){
-            model = glm::mat4(1.0f);
-            model = glm::translate(model, vegetation[i]);
-            model = glm::scale(model, glm::vec3(3.0f, 3.0f, 3.0f));
-            glBindVertexArray(grassVAO);
-            glBindTexture(GL_TEXTURE_2D, grassTexture);
-            blendingShader.setMat4("model", model);
-            glDrawArrays(GL_TRIANGLES, 0, 6);
-        }
 
         // firecube
-        lightCubeShader.use();
         lightCubeShader.setMat4("projection", projection);
         lightCubeShader.setMat4("view", view);
         glBindVertexArray(cubeVAO);
