@@ -108,10 +108,13 @@ void ProgramState::LoadFromFile(std::string filename) {
 }
 
 ProgramState *programState;
+
 void DrawImGui(ProgramState *programState);
 void lightIt(Shader shader, PointLight pointLight1, PointLight pointLight2, PointLight pointLight3, PointLight pointLight4, PointLight pointLight5, PointLight pointLight6);
 void lightDirLight(Shader shader, DirLight dirLightDay, DirLight dirLightNight);
 void lightPointNormal(Shader shader, PointLight pointLight1, PointLight pointLight2);
+
+
 int main() {
     // glfw: initialize and configure
     // ------------------------------
@@ -126,7 +129,7 @@ int main() {
 
     // glfw window creation
     // --------------------
-    GLFWwindow *window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "", NULL, NULL);
+    GLFWwindow *window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Pirates", NULL, NULL);
     if (window == NULL) {
         std::cout << "Failed to create GLFW window" << std::endl;
         glfwTerminate();
@@ -161,9 +164,6 @@ int main() {
     ImGui::CreateContext();
     ImGuiIO &io = ImGui::GetIO();
     (void) io;
-
-
-
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 330 core");
 
@@ -222,6 +222,8 @@ int main() {
     Model campfire("resources/objects/campfire/Campfire.obj");
     campfire.SetShaderTextureNamePrefix("material.");
 
+
+    // lights
     DirLight dirLightDay;
     dirLightDay.direction = glm::vec3(0.7f, -0.5f, -0.5f);
     dirLightDay.ambient = glm::vec3(0.4f, 0.4f, 0.4f);
@@ -289,7 +291,7 @@ int main() {
     pointLight6.linear = 0.09f;
     pointLight6.quadratic = 0.01f;
 
-
+    // vertices
     float skullFlag[] = {
                     // positions            //normals             // texture Coords
             1.0f, -0.0f,  1.0f, 0.0f, 0.0f, 0.0f,  1.0f, 0.0f,
@@ -414,8 +416,7 @@ int main() {
     };
 
 
-
-    // plane VAO
+    // plane VAO and VBO
     unsigned int planeVAO, planeVBO;
     glGenVertexArrays(1, &planeVAO);
     glGenBuffers(1, &planeVBO);
@@ -438,7 +439,7 @@ int main() {
     glEnableVertexAttribArray(2);
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
 
-    // grass VAO
+    // grass VAO and VBO
     unsigned int grassVAO, grassVBO;
     glGenVertexArrays(1, &grassVAO);
     glGenBuffers(1, &grassVBO);
@@ -450,7 +451,7 @@ int main() {
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
 
-    // cube VAO
+    // cube VAO and VBO
     unsigned int cubeVAO, cubeVBO;
     glGenVertexArrays(1, &cubeVAO);
     glGenBuffers(1, &cubeVBO);
@@ -460,8 +461,7 @@ int main() {
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 
-
-    // SkyBox VAO
+    // SkyBox VAO and VBO
     unsigned int skyboxVAO, skyboxVBO;
     glGenVertexArrays(1, &skyboxVAO);
     glGenBuffers(1, &skyboxVBO);
@@ -472,7 +472,6 @@ int main() {
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 
 
-
     // loading textures
     unsigned int flagTexture = loadTexture(FileSystem::getPath("resources/textures/pirateskull.png").c_str());
     unsigned int waterTexture = loadTexture(FileSystem::getPath("resources/textures/water.jpg").c_str());
@@ -481,7 +480,7 @@ int main() {
     unsigned int woodNormTexture = loadTexture(FileSystem::getPath("resources/textures/wood2/normal.jpg").c_str());
     unsigned int woodDispTexture = loadTexture(FileSystem::getPath("resources/textures/wood2/disp.jpg").c_str());
 
-    // SkyBox textures and shader configuration
+    // SkyBox textures
     vector<std::string> day
             {
                     FileSystem::getPath("resources/textures/skybox/skyboxday/right.jpg"),
@@ -504,6 +503,7 @@ int main() {
             };
     unsigned int cubemapTextureNight = loadCubemap(night);
 
+    // grass position
     vector<glm::vec3> vegetation {
         glm::vec3(34.0f, 9.0f, -58.5f),
         glm::vec3(-23.5f, 3.8f, -57.8f),
@@ -518,7 +518,8 @@ int main() {
 
     lightingShader.use();
     lightingShader.setInt("material.texture_diffuse1", 0);
-//    lightingShader.setInt("material.texture_specular1", 1);
+    lightingShader.setInt("material.texture_specular1", 1);
+
 
     blendingShader.use();
     blendingShader.setInt("texture1", 0);
@@ -526,11 +527,6 @@ int main() {
     normalMappingShader.use();
     normalMappingShader.setInt("diffuseMap", 0);
     normalMappingShader.setInt("normalMap", 1);
-
-
-    // lighting info
-    // -------------
-    glm::vec3 lightPos(0.5f, 1.0f, 0.3f);
 
     // render loop
     // -----------
@@ -551,30 +547,7 @@ int main() {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 
-        // don't forget to enable shader before setting uniforms
-        //pointLight.position = glm::vec3(4.0 * cos(currentFrame), 4.0f, 4.0 * sin(currentFrame));
-//        lightingShader.setVec3("pointLight.position", pointLight.position);
-//        lightingShader.setVec3("pointLight.ambient", pointLight.ambient);
-//        lightingShader.setVec3("pointLight.diffuse", pointLight.diffuse);
-//        lightingShader.setVec3("pointLight.specular", pointLight.specular);
-//        lightingShader.setFloat("pointLight.constant", pointLight.constant);
-//        lightingShader.setFloat("pointLight.linear", pointLight.linear);
-//        lightingShader.setFloat("pointLight.quadratic", pointLight.quadratic);
-//        lightingShader.setVec3("viewPosition", programState->camera.Position);
-//        lightingShader.setFloat("material.shininess", 32.0f);
-//
-//        lightingShader.setVec3("pointLight2.position", pointLight2.position);
-//        lightingShader.setVec3("pointLight2.ambient", pointLight2.ambient);
-//        lightingShader.setVec3("pointLight2.diffuse", pointLight2.diffuse);
-//        lightingShader.setVec3("pointLight2.specular", pointLight2.specular);
-//        lightingShader.setFloat("pointLight2.constant", pointLight2.constant);
-//        lightingShader.setFloat("pointLight2.linear", pointLight2.linear);
-//        lightingShader.setFloat("pointLight2.quadratic", pointLight2.quadratic);
-//        lightingShader.setVec3("viewPosition", programState->camera.Position);
-//        lightingShader.setFloat("material.shininess", 32.0f);
-
-
-
+        // lighting
         lightingShader.use();
         // view/projection transformations
         glm::mat4 projection = glm::perspective(glm::radians(programState->camera.Zoom),
@@ -583,6 +556,13 @@ int main() {
         lightingShader.setMat4("projection", projection);
         lightingShader.setMat4("view", view);
 
+        lightIt(lightingShader, pointLight1, pointLight2, pointLight3, pointLight4, pointLight5, pointLight6);
+        lightIt(blendingShader, pointLight1, pointLight2, pointLight3, pointLight4, pointLight5, pointLight6);
+        lightDirLight(lightingShader, dirLightDay, dirLightNight);
+        lightDirLight(blendingShader, dirLightDay, dirLightNight);
+
+
+        // normal mapping
         normalMappingShader.use();
         // view/projection transformations
         projection = glm::perspective(glm::radians(programState->camera.Zoom),
@@ -590,8 +570,6 @@ int main() {
         view = programState->camera.GetViewMatrix();
         normalMappingShader.setMat4("projection", projection);
         normalMappingShader.setMat4("view", view);
-
-        normalMappingShader.use();
         // render normal-mapped quad
         glm::mat4 model = glm::mat4(1.0f);
         //model = glm::rotate(model, glm::radians((float)glfwGetTime() * -10.0f), glm::normalize(glm::vec3(1.0, 0.0, 1.0))); // rotate the quad to show normal mapping from multiple directions
@@ -607,7 +585,6 @@ int main() {
         lightPointNormal(normalMappingShader, pointLight1, pointLight2);
         lightDirLight(normalMappingShader, dirLightDay, dirLightNight);
 
-
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, woodDiffTexture);
         glActiveTexture(GL_TEXTURE1);
@@ -617,24 +594,25 @@ int main() {
         renderQuad();
 
 
+        // render objects
         lightingShader.use();
-        // render the loaded model pirateship
-        model = glm::mat4(1.0f); //inicijalizacija
+        // pirateship
+        model = glm::mat4(1.0f); // initialization
         model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
         model = glm::scale(model, glm::vec3(1.2f, 1.2f, 1.2f));
         lightingShader.setMat4("model", model);
         pirateShip.Draw(lightingShader);
 
-        // render pirate
-        model = glm::mat4(1.0f); //inicijalizacija
+        // pirate
+        model = glm::mat4(1.0f); // initialization
         model = glm:: translate(model, glm::vec3(0.5f, 6.72f, -10.6f));
         model = glm::rotate(model, glm::radians(270.0f), glm::vec3(1.0f, 0.0f, 0.0f));
         model = glm::scale(model, glm::vec3(0.017f, 0.017f, 0.017f));
         lightingShader.setMat4("model", model);
         pirate.Draw(lightingShader);
 
-        // render pirate2
-        model = glm::mat4(1.0f); //inicijalizacija
+        // pirate2
+        model = glm::mat4(1.0f); // initialization
         model = glm:: translate(model, glm::vec3(3.2f, 3.81f, -3.6f));
         model = glm::rotate(model, glm::radians(270.0f), glm::vec3(1.0f, 0.0f, 0.0f));
         model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
@@ -642,15 +620,15 @@ int main() {
         lightingShader.setMat4("model", model);
         pirate2.Draw(lightingShader);
 
-        //cannon
-        model = glm::mat4(1.0f); //inicijalizacija
+        // cannon
+        model = glm::mat4(1.0f); // initialization
         model = glm:: translate(model, glm::vec3(1.9f, 3.81f, 2.7f));
         model = glm::rotate(model, glm::radians(270.0f), glm::vec3(1.0f, 0.0f, 0.0f));
         model = glm::rotate(model, glm::radians(-28.0f), glm::vec3(0.0f, 0.0f, 1.0f));
         model = glm::scale(model, glm::vec3(0.022f, 0.022f, 0.022f));
         lightingShader.setMat4("model", model);
         cannon.Draw(lightingShader);
-        model = glm::mat4(1.0f); //inicijalizacija
+        model = glm::mat4(1.0f); // initialization
         model = glm:: translate(model, glm::vec3(-1.9f, 3.81f, 2.7f));
         model = glm::rotate(model, glm::radians(270.0f), glm::vec3(1.0f, 0.0f, 0.0f));
         model = glm::rotate(model, glm::radians(-150.0f), glm::vec3(0.0f, 0.0f, 1.0f));
@@ -658,22 +636,22 @@ int main() {
         lightingShader.setMat4("model", model);
         cannon.Draw(lightingShader);
 
-        // render island
-        model = glm::mat4(1.0f); //inicijalizacija
+        // island
+        model = glm::mat4(1.0f); // initialization
         model = glm:: translate(model, glm::vec3(-28.0f, 0.0f, -111.0f));
         model = glm::scale(model, glm::vec3(0.6f, 0.6f, 0.6f));
         lightingShader.setMat4("model", model);
         island.Draw(lightingShader);
 
-        // render treasure
-        model = glm::mat4(1.0f); //inicijalizacija
+        // treasure
+        model = glm::mat4(1.0f); // initialization
         model = glm:: translate(model, glm::vec3(-3.22f, 6.6f, -12.9f));
         model = glm::rotate(model, glm::radians(270.0f), glm::vec3(1.0f, 0.0f, 0.0f));
         model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
         model = glm::scale(model, glm::vec3(0.017f, 0.017f, 0.017f));
         lightingShader.setMat4("model", model);
         treasure.Draw(lightingShader);
-        model = glm::mat4(1.0f); //inicijalizacija
+        model = glm::mat4(1.0f); // initialization
         model = glm:: translate(model, glm::vec3(3.22f, 6.6f, -12.9f));
         model = glm::rotate(model, glm::radians(270.0f), glm::vec3(1.0f, 0.0f, 0.0f));
         model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
@@ -681,43 +659,43 @@ int main() {
         lightingShader.setMat4("model", model);
         treasure.Draw(lightingShader);
 
-        // render lamp
+        // lamp
         if(dayNnite) {
-            model = glm::mat4(1.0f); //inicijalizacija
+            model = glm::mat4(1.0f); // initialization
             model = glm::translate(model, glm::vec3(1.4f, 4.6f, -8.0f));
             model = glm::scale(model, glm::vec3(0.01f, 0.01f, 0.01f));
             lightingShader.setMat4("model", model);
             lamp.Draw(lightingShader);
-            model = glm::mat4(1.0f); //inicijalizacija
+            model = glm::mat4(1.0f); // initialization
             model = glm::translate(model, glm::vec3(-1.4f, 4.6f, -8.0f));
             model = glm::scale(model, glm::vec3(0.01f, 0.01f, 0.01f));
             lightingShader.setMat4("model", model);
             lamp.Draw(lightingShader);
-            model = glm::mat4(1.0f); //inicijalizacija
+            model = glm::mat4(1.0f); // initialization
             model = glm::translate(model, glm::vec3(-37.5f, 22.65f, -100.0f));
             model = glm::scale(model, glm::vec3(0.017f, 0.017f, 0.017f));
             lightingShader.setMat4("model", model);
             lamp.Draw(lightingShader);
         }
         else {
-            model = glm::mat4(1.0f); //inicijalizacija
+            model = glm::mat4(1.0f); // initialization
             model = glm::translate(model, glm::vec3(1.4f, 4.6f, -8.0f));
             model = glm::scale(model, glm::vec3(0.01f, 0.01f, 0.01f));
             lightingShader.setMat4("model", model);
             nightlamp.Draw(lightingShader);
-            model = glm::mat4(1.0f); //inicijalizacija
+            model = glm::mat4(1.0f); // initialization
             model = glm::translate(model, glm::vec3(-1.4f, 4.6f, -8.0f));
             model = glm::scale(model, glm::vec3(0.01f, 0.01f, 0.01f));
             lightingShader.setMat4("model", model);
             nightlamp.Draw(lightingShader);
-            model = glm::mat4(1.0f); //inicijalizacija
+            model = glm::mat4(1.0f); // initialization
             model = glm::translate(model, glm::vec3(-37.5f, 22.65f, -100.0f));
             model = glm::scale(model, glm::vec3(0.017f, 0.017f, 0.017f));
             lightingShader.setMat4("model", model);
             nightlamp.Draw(lightingShader);
         }
         // table
-        model = glm::mat4(1.0f); //inicijalizacija
+        model = glm::mat4(1.0f); // initialization
 
         model = glm:: translate(model, glm::vec3(-37.0f, 20.0f, -100.0f));
         model = glm::rotate(model, glm::radians(-15.0f), glm::vec3(0.0f, 1.0f, 0.0f));
@@ -725,28 +703,28 @@ int main() {
         lightingShader.setMat4("model", model);
         table.Draw(lightingShader);
 
-        // beer
-        model = glm::mat4(1.0f); //inicijalizacija
+        // zajecarac
+        model = glm::mat4(1.0f); // initialization
         model = glm:: translate(model, glm::vec3(-35.0f, 22.6f, -99.5f));
-        model = glm::rotate(model, glm::radians(120.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        //model = glm::rotate(model, glm::radians(120.0f), glm::vec3(0.0f, 1.0f, 0.0f));
         model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));
         lightingShader.setMat4("model", model);
         zajecarac.Draw(lightingShader);
-        model = glm::mat4(1.0f); //inicijalizacija
+        model = glm::mat4(1.0f); // initialization
         model = glm:: translate(model, glm::vec3(-38.5f, 22.6f, -101.1f));
-        model = glm::rotate(model, glm::radians(170.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        //model = glm::rotate(model, glm::radians(170.0f), glm::vec3(0.0f, 1.0f, 0.0f));
         model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));
         lightingShader.setMat4("model", model);
         zajecarac.Draw(lightingShader);
 
         // chair
-        model = glm::mat4(1.0f); //inicijalizacija
+        model = glm::mat4(1.0f); // initialization
         model = glm:: translate(model, glm::vec3(-38.0f, 20.0f, -104.0f));
         model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
         model = glm::scale(model, glm::vec3(4.0f, 4.0f, 4.0f));
         lightingShader.setMat4("model", model);
         chair.Draw(lightingShader);
-        model = glm::mat4(1.0f); //inicijalizacija
+        model = glm::mat4(1.0f); // initialization
         model = glm:: translate(model, glm::vec3(-33.5f, 20.0f, -98.0f));
         model = glm::rotate(model, glm::radians(165.0f), glm::vec3(0.0f, 1.0f, 0.0f));
         model = glm::scale(model, glm::vec3(4.0f, 4.0f, 4.0f));
@@ -754,7 +732,7 @@ int main() {
         chair.Draw(lightingShader);
 
         // campfire
-        model = glm::mat4(1.0f); //inicijalizacija
+        model = glm::mat4(1.0f); // initialization
         model = glm:: translate(model, glm::vec3(-14.6f, 1.8f, -53.5f));
         //model = glm::rotate(model, glm::radians(165.0f), glm::vec3(0.0f, 1.0f, 0.0f));
         model = glm::scale(model, glm::vec3(0.05f, 0.05f, 0.05f));
@@ -771,6 +749,7 @@ int main() {
         lightingShader.setMat4("model", model);
         glDrawArrays(GL_TRIANGLES, 0, 6);
 
+        // enable face culling
         glEnable(GL_CULL_FACE);
         // water
         model = glm::mat4(1.0f);
@@ -779,9 +758,10 @@ int main() {
         glBindTexture(GL_TEXTURE_2D, waterTexture);
         lightingShader.setMat4("model", model);
         glDrawArrays(GL_TRIANGLES, 0, 6);
+        // disable face culling
         glDisable(GL_CULL_FACE);
 
-        // grass
+        // Blending: grass
         blendingShader.use();
         blendingShader.setMat4("view", view);
         blendingShader.setMat4("projection", projection);
@@ -808,14 +788,6 @@ int main() {
         lightCubeShader.setVec3("lightColor", glm::vec3(0.99f, 0.31f, 0.0f)); //254,80,0
         glDrawArrays(GL_TRIANGLES, 0, 36);
 
-        // lighting
-
-
-        lightIt(lightingShader, pointLight1, pointLight2, pointLight3, pointLight4, pointLight5, pointLight6);
-        lightIt(blendingShader, pointLight1, pointLight2, pointLight3, pointLight4, pointLight5, pointLight6);
-
-        lightDirLight(lightingShader, dirLightDay, dirLightNight);
-        lightDirLight(blendingShader, dirLightDay, dirLightNight);
 
         // draw skybox as last
         glDepthMask(GL_FALSE);
@@ -837,11 +809,8 @@ int main() {
         glDepthMask(GL_TRUE);
 
 
-
         if (programState->ImGuiEnabled)
             DrawImGui(programState);
-
-
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
@@ -882,6 +851,21 @@ void processInput(GLFWwindow *window) {
         programState->camera.ProcessKeyboard(LEFT, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         programState->camera.ProcessKeyboard(RIGHT, deltaTime);
+
+    if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
+    {
+        if (heightScale > 0.0f)
+            heightScale -= 0.005f;
+        else
+            heightScale = 0.0f;
+    }
+    else if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+    {
+        if (heightScale < 1.0f)
+            heightScale += 0.005f;
+        else
+            heightScale = 1.0f;
+    }
 
 }
 
@@ -1035,6 +1019,7 @@ unsigned int loadCubemap(vector<std::string> faces)
     return textureID;
 }
 
+// directional lighting
 void lightDirLight(Shader shader, DirLight dirLightDay, DirLight dirLightNight){
     shader.use();
     if(dayNnite){
@@ -1054,6 +1039,7 @@ void lightDirLight(Shader shader, DirLight dirLightDay, DirLight dirLightNight){
     }
 }
 
+// point lighting for normal mapping (only 2 lamps are next to wooden door with normal and parallax mapping included)
 void lightPointNormal(Shader shader, PointLight pointLight1, PointLight pointLight2){
     shader.use();
 
@@ -1102,6 +1088,7 @@ void lightPointNormal(Shader shader, PointLight pointLight1, PointLight pointLig
 
 }
 
+// point lighting
 void lightIt(Shader shader, PointLight pointLight1, PointLight pointLight2, PointLight pointLight3, PointLight pointLight4, PointLight pointLight5, PointLight pointLight6) {
     //treasure lighting
     shader.use();
@@ -1171,7 +1158,7 @@ void lightIt(Shader shader, PointLight pointLight1, PointLight pointLight2, Poin
 
     }
     else {
-        // Point light 255,184,28
+        // Point light
         shader.setVec3("pointLight1.position", pointLight1.position);
         shader.setVec3("pointLight1.ambient", pointLight1.ambient);
         shader.setVec3("pointLight1.diffuse", pointLight1.diffuse);
