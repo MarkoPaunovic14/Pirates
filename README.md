@@ -18,6 +18,8 @@ It is made in C++ using OpenGL.
 
 <kbd>MOUSE</kbd> - look around
 
+<kbd>SCROLL</kbd> - zoom
+
 <kbd>L</kbd> - change between day and night
 
 <kbd>Q</kbd> - increase height scale for parallax mapping
