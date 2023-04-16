@@ -6,7 +6,7 @@ Scene with a pirate ship and an island with a small cabin where pirates spend th
 It is made in C++ using OpenGL.
 
 
-## Controlls
+## Controls
 
 <kbd>W</kbd> - move forward
 
