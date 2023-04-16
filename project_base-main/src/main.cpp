@@ -784,6 +784,7 @@ int main() {
 
 
         // firecube
+        lightCubeShader.use();
         lightCubeShader.setMat4("projection", projection);
         lightCubeShader.setMat4("view", view);
         glBindVertexArray(cubeVAO);
