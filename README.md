@@ -1,12 +1,12 @@
 # Pirates
 
-About:
+# About:
 
 Scene with a pirate ship and an island with a small cabin where pirates spend their time.
 It is made in C++ using OpenGL.
 
 
-Controlls:
+# Controlls:
 
 W - move forward
 S - move backwards
