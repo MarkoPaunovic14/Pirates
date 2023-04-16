@@ -8,7 +8,8 @@ It is made in C++ using OpenGL.
 
 ## Controlls
 
-<kbd>W</kbd> - move forward "\n"
+<kbd>W</kbd> - move forward
+
 S - move backwards
 A - move left
 D - move right
