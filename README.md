@@ -7,6 +7,11 @@ Made with C++ using OpenGL, GLFW and GLAD.
 
 [Video preview](https://www.youtube.com/watch?v=nfOEGd59p7M)
 
+
+Group A: CubeMaps (SkyBox)
+
+Group B: Normal Mapping and Parallax Mapping
+
 ## Controls
 
 <kbd>W</kbd> - move forward
