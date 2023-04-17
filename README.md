@@ -3,7 +3,7 @@
 ## About
 
 Scene with a pirate ship and an island with a small cabin where pirates spend their time.
-Made in C++ using OpenGL.
+Made with C++ using OpenGL, GLFW and GLAD.
 
 
 ## Controls
