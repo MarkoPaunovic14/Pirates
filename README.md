@@ -5,6 +5,7 @@
 Scene with a pirate ship and an island with a small cabin where pirates spend their time.
 Made with C++ using OpenGL, GLFW and GLAD.
 
+[Video preview](https://www.youtube.com/watch?v=nfOEGd59p7M)
 
 ## Controls
 
