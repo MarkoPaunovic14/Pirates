@@ -8,7 +8,7 @@ Made with C++ using OpenGL, GLFW and GLAD.
 [Video preview](https://www.youtube.com/watch?v=nfOEGd59p7M)
 
 
-Group A: CubeMaps (SkyBox)
+Group A: CubeMaps
 
 Group B: Normal Mapping and Parallax Mapping
 
