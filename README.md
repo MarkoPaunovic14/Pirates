@@ -3,8 +3,14 @@
 ## About
 
 Scene with a pirate ship and an island with a small cabin where pirates spend their time.
-Made in C++ using OpenGL.
+Made with C++ using OpenGL, GLFW and GLAD.
 
+[Video preview](https://www.youtube.com/watch?v=nfOEGd59p7M)
+
+
+Group A: CubeMaps
+
+Group B: Normal Mapping and Parallax Mapping
 
 ## Controls
 
